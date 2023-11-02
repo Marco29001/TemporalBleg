@@ -32,10 +32,13 @@ function QrScannerScreen(props) {
       if (isScanned) {
         setIsScanned(false);
         if (codes[0].value !== '') {
-          if (type == 'gateway') {
-            getValidateGateway(codes[0].value);
-          } else {
-            getValidateSensor(codes[0].value);
+          switch (type) {
+            case 'gateway':
+              getValidateGateway(codes[0].value);
+              break;
+            case 'sensor':
+              getValidateSensor(codes[0].value);
+              break;
           }
         }
       }

@@ -18,7 +18,7 @@ function GraphicsModal(props) {
   const sourceUri =
     Platform.OS === 'android'
       ? 'file:///android_asset/html/index.html'
-      : 'web.budle/site/index.html';
+      : 'Web.bundle/site/index.html';
 
   const scriptSetValue = (variableName, variableValue) => {
     return `
@@ -39,23 +39,26 @@ function GraphicsModal(props) {
   }, [variable]);
 
   return (
-    <Modal animationType="slide" transparent={true} visible={modalVisible}>
-      <View style={Styles.modalContainer}>
+    <>
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={Styles.centerModalContainer}>
-          {showReturnButton && (
-            <TouchableOpacity
-              style={Styles.btnCloseModal}
-              onPress={handleClose}>
-              <BlegIcon name={'icon_return'} color={'#FFFFFF'} size={25} />
-            </TouchableOpacity>
-          )}
-
           <View style={Styles.graphicContent}>
+            <View style={Styles.headerContent} />
+            {showReturnButton && (
+              <TouchableOpacity
+                style={Styles.btnCloseModal}
+                onPress={handleClose}>
+                <BlegIcon name={'icon_return'} color={'#FFFFFF'} size={25} />
+              </TouchableOpacity>
+            )}
             <WebView
               ref={r => (webRef.current = r)}
               originWhitelist={['*']}
               javaScriptEnabled={true}
               setBuiltInZoomControls={false}
+              bounces={false}
+              textInteractionEnabled={false}
+              source={{uri: sourceUri}}
               onMessage={event => {
                 if (event.nativeEvent.data == 'History') {
                   setShowReturnButton(!showReturnButton);
@@ -63,23 +66,19 @@ function GraphicsModal(props) {
                   console.log(event.nativeEvent.data);
                 }
               }}
-              source={{uri: sourceUri}}
             />
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </>
   );
 }
 
 const {width, height} = Dimensions.get('window');
 const Styles = StyleSheet.create({
-  container: {backgroundColor: '#FFFFFF', justifyContent: 'center'},
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  headerContent: {
+    height: 50,
+    backgroundColor: '#003180',
   },
   centerModalContainer: {
     width: width,
@@ -96,43 +95,13 @@ const Styles = StyleSheet.create({
     width: 50,
     height: 50,
     position: 'absolute',
-    top: 10,
+    top: 60,
     left: 10,
     zIndex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dataContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  txtTitleData: {fontSize: 40, color: '#5F6F7E'},
-  txtData: {fontSize: 65, fontWeight: 'bold', color: '#17A0A3', marginTop: 30},
   graphicContent: {flex: 2},
-  maxandminContainer: {
-    width: width,
-    height: 60,
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: 50,
-  },
-  minContainer: {
-    flex: 1,
-    paddingHorizontal: 30,
-  },
-  maxContainer: {
-    flex: 1,
-    paddingHorizontal: 30,
-    alignItems: 'flex-end',
-  },
-  txtTitleMaxOrMin: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#17A0A3',
-    marginVertical: 2,
-  },
-  txtInfo: {fontSize: 16, fontWeight: 'bold', color: '#003180'},
 });
 
 export default GraphicsModal;

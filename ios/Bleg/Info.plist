@@ -35,8 +35,26 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+    <string>This application requires permissions for the use of bluetooth to detect nearby devices the information will not be shared with the server</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>This application requires permissions for the use of bluetooth to detect nearby devices the information will not be shared with the server</string>
+    <key>NSCameraUsageDescription</key>
+    <string>TripOnTime requires access to the camara to scan QR codes, the scanned information will be used to request data from a safe server</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>TripOnTime requires access to your location to monitor which unit is closer in the map. The location wont be shared with any other service because is only used locally in your device</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>TripOnTime requires access to your location to monitor which unit is closer in the map. The location wont be shared with any other service because is only used locally in your device.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>TripOnTime requires access to your location to monitor which unit is closer in the map. The location wont be shared with any other service because is only used locally in your device</string>
+    <key>UIAppFonts</key>
+    <array>
+        <string>BlegIcon.ttf</string>
+    </array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>

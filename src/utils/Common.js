@@ -102,6 +102,12 @@ export function convertDecToFloat(data) {
   var buf = new ArrayBuffer(4);
   var view = new DataView(buf);
 
+  if (data.length == 1) {
+    num = data[0];
+
+    return num;
+  }
+
   data.forEach(function (b, i) {
     view.setUint8(i, b);
   });

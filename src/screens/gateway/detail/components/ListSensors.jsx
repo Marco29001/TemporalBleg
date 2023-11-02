@@ -20,7 +20,6 @@ import ErrorManager from '../../../../utils/ErrorManager';
 
 function ListSensors(props) {
   const {sensors, error, refreshing, onRefresh} = props;
-  const [sensor, setSensor] = useState(null);
   const {acceptDialog} = useDialog();
   const {callEnpoint} = useApiRequest();
 
@@ -30,10 +29,10 @@ function ListSensors(props) {
     });
   };
 
-  const handleRemove = sensor$ => {
+  const handleRemove = sensor => {
     WARNING_DIALOG.subtitle =
       '¿Estas seguro que deseas eliminar el sensor con numero de serie ' +
-      sensor$.serialNumber +
+      sensor.serialNumber +
       '?';
     WARNING_DIALOG.txtAccept = 'Si, eliminar';
     WARNING_DIALOG.isCancel = true;
@@ -45,8 +44,6 @@ function ListSensors(props) {
         onRefresh();
       }
     });
-
-    setSensor(sensor$);
   };
 
   const showDialog = async (config, action) => {

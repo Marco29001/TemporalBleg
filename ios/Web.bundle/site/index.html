@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Template BLEG</title>
+  <link type="text/css" rel="stylesheet" href="./css/styles.css" >
+
+  <script src="./js/jquery-3.6.3.min.js"></script>
+  <script src="./js/moment.min.js"></script>
+  <script src="./js/highcharts.min.js"></script>
+</head>
+<body>
+
+  <div class="wrap">
+    <header>
+      <h1 id="variableName">-</h1>
+      <h1 id="variableValue">-</h1>
+    </header>
+
+    <div id="box">
+      <div id="chart"></div>
+      <div id="footerContainer">
+        <div id="chart-min">
+          <p id="txtMin">MIN</p>
+          <p id="min">-</p>
+        </div>
+        <div id="chart-max">
+          <p id="txtMax">MAX</p>
+          <p id="max">-</p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <h1 class="footer-title">Historico</h1>
+
+      <div class="footer-cards-wrap"></div>
+    </footer>
+  </div>
+
+  <script type="text/javascript" src="./js/app.js"></script>
+  
+</body>
+</html>

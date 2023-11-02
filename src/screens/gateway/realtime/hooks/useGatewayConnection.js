@@ -56,8 +56,8 @@ const Localvariables = [
   },
   {
     id: 5,
-    name: 'Voltaje 2',
-    unit: 'V',
+    name: 'Temperatura',
+    unit: '°C',
     unitType: 1,
   },
   {
