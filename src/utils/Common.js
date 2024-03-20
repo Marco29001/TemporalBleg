@@ -1,4 +1,5 @@
 import Toast from 'react-native-toast-message';
+import moment from 'moment';
 import {Buffer} from 'buffer';
 
 export const showToastMessage = (type, message) => {
@@ -23,6 +24,12 @@ export function calculateZindex(index, length) {
   return zindex;
 }
 
+export function dateFormat(date) {
+  const formatDate = moment(date).format('DD/MM/YYYY HH:mm');
+
+  return formatDate;
+}
+
 //validate data
 export function validateMacAddress(valor) {
   let regex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
@@ -43,37 +50,35 @@ export function validateSerialNumber(value) {
   }
 }
 
-export function sumValuesArray(data) {
-  const total = data.reduce((a, b) => a + b, 0);
+//convert Base64 to object
+export function convertBase64ToString(data) {
+  try {
+    const decodedData = Buffer.from(data, 'base64').toJSON();
+    const stringData = String.fromCharCode(...decodedData.data);
+    const jsonData = JSON.parse(stringData);
 
-  return total;
+    return jsonData;
+  } catch (error) {
+    console.error('Error al decodificar ', error);
+    return null;
+  }
 }
 
-export function searchSequenceSTXETX(currentFlag, data) {
-  let stx = -1;
-  let edx = -1;
-  let sequence = [];
-  let stringData = '';
+//convert array to MacAddress
+export function convertMacAddress(data) {
+  const macArray = [];
 
-  for (currentFlag; currentFlag < data.length; currentFlag++) {
-    if (data[currentFlag] === 2) {
-      stx = currentFlag;
-    } else if (data[currentFlag] === 3) {
-      edx = currentFlag;
-      currentFlag += 1;
-      break;
-    }
+  for (let i = 0; i < data.length; i++) {
+    const byteHex = data[i].toString(16).toUpperCase().padStart(2, '0');
+
+    macArray.push(byteHex);
   }
 
-  if (stx !== -1 && edx !== -1) {
-    sequence = data.slice(stx + 1, edx);
-    stringData = convertDecToHex(sequence);
-  }
+  const macAddress = macArray.join(':');
 
-  return {currentFlag, stringData};
+  return macAddress;
 }
-
-//convert data
+//------------------------------------------------------------
 export function convertBase64ToArray(data) {
   const json = Buffer.from(data, 'base64').toJSON();
 
@@ -81,10 +86,16 @@ export function convertBase64ToArray(data) {
 }
 
 export function convertBase64ToHex(data) {
-  const buffer = Buffer.from(data, 'base64');
-  const bufString = buffer.toString('hex');
+  try {
+    if (data == null) return;
 
-  return bufString.toUpperCase();
+    const buffer = Buffer.from(data, 'base64');
+    const bufString = buffer.toString('hex');
+
+    return bufString.toUpperCase();
+  } catch (error) {
+    console.log('error', error);
+  }
 }
 
 export function convertHexadecimalToInt(data) {
@@ -137,22 +148,42 @@ export function convertToString(data) {
   return str.toString();
 }
 
-export function convertMacAddreess(data) {
-  const macArray = [];
-
-  for (let i = 0; i < data.length; i++) {
-    const byteHex = data[i].toString(16).toUpperCase().padStart(2, '0');
-
-    macArray.push(byteHex);
-  }
-
-  const macAddress = macArray.join(':');
-
-  return macAddress;
-}
-
 export function convertDecToHex(data) {
   const stringData = String.fromCharCode(...data);
 
   return stringData;
+}
+
+export function searchSequenceSTXETX(currentFlag, data) {
+  let stx = -1;
+  let edx = -1;
+  let sequence = [];
+  let stringData = '';
+
+  for (currentFlag; currentFlag < data.length; currentFlag++) {
+    if (data[currentFlag] === 2) {
+      stx = currentFlag;
+    } else if (data[currentFlag] === 3) {
+      edx = currentFlag;
+      currentFlag += 1;
+      break;
+    }
+  }
+
+  if (stx !== -1 && edx !== -1) {
+    sequence = data.slice(stx + 1, edx);
+    stringData = convertDecToHex(sequence);
+  }
+
+  return {currentFlag, stringData};
+}
+
+export function sumValuesArray(data) {
+  const total = data.reduce((a, b) => a + b, 0);
+
+  return total;
+}
+
+export function EmptyObjectValidate(object) {
+  return typeof object === 'object';
 }

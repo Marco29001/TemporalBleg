@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, TextInput, StyleSheet} from 'react-native';
+import {i18n} from '../../../assets/locale/i18n';
 import {useGlobalContext} from '../../../context/GlobalContext';
 import {getGateways} from '../../../services/remote/GatewayServices';
 import useApiRequest from '../../../hooks/useApiRequest';
@@ -10,7 +11,6 @@ import RegisterModal from '../../../components/RegisterModal';
 import ListGateways from './components/ListGateways';
 import BlegIcon from '../../../assets/icons/customIcons/BlegIcon';
 import {showToastMessage} from '../../../utils/Common';
-import ErrorManager from '../../../utils/ErrorManager';
 
 function GatewaysListScreen(props) {
   const {listGateways, setListGateways, setListGatewaysRealTime} =
@@ -21,7 +21,7 @@ function GatewaysListScreen(props) {
     'deviceName',
     listGateways,
   );
-  const {loading, error, callEnpoint} = useApiRequest();
+  const {loading, error, callEndpoint} = useApiRequest();
 
   const handleRegister = () => {
     setRegisterModal(!registerModal);
@@ -29,7 +29,7 @@ function GatewaysListScreen(props) {
 
   const RefreshGateways = async () => {
     onChangeSearch('');
-    const response = await callEnpoint(getGateways());
+    const response = await callEndpoint(getGateways());
     if (response) {
       response.map(gateway => {
         if (gateway.device != null) {
@@ -43,17 +43,17 @@ function GatewaysListScreen(props) {
   };
 
   useEffect(() => {
-    const unsuscribe = props.navigation.addListener('focus', () => {
+    const unsubscribe = props.navigation.addListener('focus', () => {
       setListGatewaysRealTime([]);
       RefreshGateways();
     });
 
-    return unsuscribe;
+    return unsubscribe;
   }, [props.navigation, listGateways]);
 
   useEffect(() => {
-    if (error.value) {
-      showToastMessage('didcomErrorToast', ErrorManager(error.status));
+    if (error) {
+      showToastMessage('didcomErrorToast', error.message);
     }
   }, [error]);
 
@@ -62,7 +62,12 @@ function GatewaysListScreen(props) {
       <LoadingModal visible={loading} />
 
       <View style={GatewaysStyle.mainContainer}>
-        <HeaderTab {...props} title={'BLEG'} screen={'GatewaysScreen'} />
+        <HeaderTab
+          {...props}
+          title={i18n.t('GatewayList.TitleHeader')}
+          screen={'GatewaysScreen'}
+        />
+
         <View style={GatewaysStyle.gatewayContainer}>
           <View style={GatewaysStyle.searchInputContainer}>
             <BlegIcon name="icon_search" color={'#46B7AE'} size={20} />

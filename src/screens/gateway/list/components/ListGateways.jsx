@@ -7,33 +7,30 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import {useGlobalContext} from '../../../../context/GlobalContext';
+import {i18n} from '../../../../assets/locale/i18n';
 import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon';
 import ListEmptyComp from '../../../../components/ListEmptyComp';
+import {useGlobalContext} from '../../../../context/GlobalContext';
 
 function ListGateways(props) {
-  const {gateways, loading, error, onRefresh, handleRegister} = props;
+  const {gateways, loading, onRefresh, handleRegister, navigation} = props;
   const {setGateway} = useGlobalContext();
 
-  const handleItem = item => {
+  const handleItem = item => () => {
     setGateway(item);
-    props.navigation.replace('GatewayDetailScreen');
+    navigation.replace('GatewayDetailScreen');
   };
 
   if (loading) {
     return null;
   }
 
-  if (error.value || gateways.length == 0) {
+  if (gateways.length == 0) {
     return (
       <ListEmptyComp
         icon={'icon_gateway'}
         handleRefresh={onRefresh}
-        message={
-          error.value
-            ? 'Ocurrio un error al momento de cargar los gateways'
-            : 'No se encontraron gateways'
-        }
+        message={i18n.t('GatewayList.EmptyGateway')}
       />
     );
   }
@@ -45,12 +42,8 @@ function ListGateways(props) {
         showsVerticalScrollIndicator={false}
         data={gateways}
         renderItem={({item}) => {
-          const deviceName = item.device?.name || '';
-          const serieGo = item.device?.serialNumber || '';
           return (
-            <TouchableOpacity
-              style={Styles.item}
-              onPress={() => handleItem(item)}>
+            <TouchableOpacity style={Styles.item} onPress={handleItem(item)}>
               <View style={Styles.leftItemContainer}>
                 <View style={Styles.iconGatewayContainer}>
                   <BlegIcon name="icon_gateway" color={'#003180'} size={20} />
@@ -60,16 +53,19 @@ function ListGateways(props) {
                     {item?.serialNumber}
                   </Text>
                   <Text style={Styles.txtSubtitleGateway}>
-                    {'Unidad: ' + deviceName}
+                    {i18n.t('GatewayList.Unit')}:{item.device?.name ?? ''}
                   </Text>
                   <Text style={Styles.txtSubtitleGateway}>
-                    {'Serie Go: ' + serieGo}
+                    {i18n.t('GatewayList.NoSerieGo')}:
+                    {item.device?.serialNumber ?? ''}
                   </Text>
                 </View>
               </View>
               <View style={Styles.countSensorsContainer}>
                 <Text style={Styles.txtSensors}>{item?.totalSensors}</Text>
-                <Text style={Styles.txtTitleSensors}>Sensores</Text>
+                <Text style={Styles.txtTitleSensors}>
+                  {i18n.t('GatewayList.Sensors')}
+                </Text>
               </View>
             </TouchableOpacity>
           );

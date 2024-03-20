@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import {i18n} from '../../../../assets/locale/i18n';
 import {getDevices} from '../../../../services/remote/DeviceServices';
 import useApiRequest from '../../../../hooks/useApiRequest';
 import useSearch from '../../../../hooks/useSearch';
@@ -17,18 +18,17 @@ import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon';
 import ListEmptyComp from '../../../../components/ListEmptyComp';
 import LoadingModal from '../../../../components/LoadingModal';
 
-function UnitsModal(props) {
-  const {visible, handleSelectUnit, handleClose} = props;
+function UnitsModal({visible, handleSelectUnit, handleClose}) {
   const [units, setUnits] = useState([]);
   const {search, filtered, onChangeSearch} = useSearch(
     'serialNumber',
     'name',
     units,
   );
-  const {loading, error, callEnpoint} = useApiRequest();
+  const {loading, error, callEndpoint} = useApiRequest();
 
-  const RefreshUnits = async () => {
-    const response = await callEnpoint(getDevices());
+  const refreshUnits = async () => {
+    const response = await callEndpoint(getDevices());
     if (response) {
       setUnits(response);
     }
@@ -36,7 +36,7 @@ function UnitsModal(props) {
 
   useEffect(() => {
     if (visible) {
-      RefreshUnits();
+      refreshUnits();
     } else {
       setUnits([]);
       onChangeSearch('');
@@ -60,14 +60,18 @@ function UnitsModal(props) {
               </TouchableOpacity>
             </View>
             <View style={styles.titleContainer}>
-              <Text style={styles.txtTitle}>Unidades</Text>
-              <Text style={styles.txtSubtitle}>(selecciona un vehiculo)</Text>
+              <Text style={styles.txtTitle}>
+                {i18n.t('GatewayRegister.Units')}
+              </Text>
+              <Text style={styles.txtSubtitle}>
+                {i18n.t('GatewayRegister.SelectUnit')}
+              </Text>
             </View>
             <View style={styles.searchInputContent}>
               <BlegIcon name="icon_search" color={'#46B7AE'} size={20} />
               <TextInput
                 style={styles.searchInput}
-                placeholder={'Buscar'}
+                placeholder={i18n.t('GatewayRegister.Search')}
                 placeholderTextColor={'#5F6F7E'}
                 keyboardType={'default'}
                 value={search}
@@ -75,15 +79,13 @@ function UnitsModal(props) {
               />
             </View>
           </View>
-          {error.value || filtered.length == 0 ? (
+          {error || filtered.length == 0 ? (
             <ListEmptyComp
               icon={'icon_bus'}
               message={
-                error.value
-                  ? ' Ocurrio un error al cargar el listado de unidades'
-                  : 'No se encontraron unidades'
+                error ? error.message : i18n.t('GatewayRegister.NoSearchUnit')
               }
-              handleRefresh={RefreshUnits}
+              handleRefresh={refreshUnits}
             />
           ) : (
             <FlatList
@@ -97,9 +99,13 @@ function UnitsModal(props) {
                     style={styles.item}
                     onPress={() => handleSelectUnit(item)}>
                     <View style={styles.infoGatewayContent}>
-                      <Text style={styles.txtTitleField}>Unidad</Text>
+                      <Text style={styles.txtTitleField}>
+                        {i18n.t('GatewayRegister.Unit')}
+                      </Text>
                       <Text style={styles.txtField}>{item.name}</Text>
-                      <Text style={styles.txtTitleField}>No.Serie GO</Text>
+                      <Text style={styles.txtTitleField}>
+                        {i18n.t('GatewayRegister.NoSerieGo')}
+                      </Text>
                       <Text style={styles.txtField}>{item.serialNumber}</Text>
                     </View>
                     <View style={styles.iconGatewayContent}>
@@ -109,7 +115,7 @@ function UnitsModal(props) {
                 );
               }}
               refreshControl={
-                <RefreshControl refreshing={loading} onRefresh={RefreshUnits} />
+                <RefreshControl refreshing={loading} onRefresh={refreshUnits} />
               }
             />
           )}

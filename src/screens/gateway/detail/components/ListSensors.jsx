@@ -1,13 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {
-  View,
-  FlatList,
-  RefreshControl,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-import LottieView from 'lottie-react-native';
+import React, {useEffect} from 'react';
+import {View, FlatList, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {i18n} from '../../../../assets/locale/i18n';
 import {deleteSensor} from '../../../../services/remote/SensorServices';
 import useApiRequest from '../../../../hooks/useApiRequest';
 import useDialog from '../../../../hooks/useDialog';
@@ -15,77 +8,51 @@ import ListEmptyComp from '../../../../components/ListEmptyComp';
 import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon';
 import SensorIcon from './SensorIcon';
 import {showToastMessage} from '../../../../utils/Common';
-import {WARNING_DIALOG} from '../../../../utils/Constants';
-import ErrorManager from '../../../../utils/ErrorManager';
+import {
+  DELETE_SENSOR_DIALOG,
+  WARNING_DIALOG,
+} from '../../../../utils/Constants';
 
-function ListSensors(props) {
-  const {sensors, error, refreshing, onRefresh} = props;
-  const {acceptDialog} = useDialog();
-  const {callEnpoint} = useApiRequest();
+function ListSensors({sensors, onRefresh, navigation}) {
+  const {showDialog} = useDialog();
+  const {error, callEndpoint} = useApiRequest();
 
-  const handleEdit = item => {
-    props.navigation.replace('SensorEditScreen', {
-      sensorId: item.id,
+  const handleEdit = sensor => () => {
+    navigation.replace('SensorEditScreen', {
+      sensorId: sensor.id,
     });
   };
 
-  const handleRemove = sensor => {
-    WARNING_DIALOG.subtitle =
-      '¿Estas seguro que deseas eliminar el sensor con numero de serie ' +
-      sensor.serialNumber +
-      '?';
-    WARNING_DIALOG.txtAccept = 'Si, eliminar';
-    WARNING_DIALOG.isCancel = true;
-    WARNING_DIALOG.txtCancel = 'No, eliminar';
-    showDialog(WARNING_DIALOG, async () => {
-      const response = await callEnpoint(deleteSensor(sensor.id));
+  const handleRemove = sensor => () => {
+    DELETE_SENSOR_DIALOG.subtitle =
+      i18n.t('GatewayDetail.QuestionDeleteGateway') + sensor.serialNumber + '?';
+    showDialog(DELETE_SENSOR_DIALOG, async () => {
+      const response = await callEndpoint(deleteSensor(sensor.id));
       if (response) {
-        showToastMessage('didcomSuccessToast', 'Se elimino correctamente');
+        showToastMessage(
+          'didcomSuccessToast',
+          i18n.t('GatewayDetail.RemovedSuccessfully'),
+        );
         onRefresh();
       }
     });
   };
 
-  const showDialog = async (config, action) => {
-    const isAccept = await acceptDialog(config);
-
-    if (isAccept) {
-      action();
-    }
-  };
-
   useEffect(() => {
-    if (error.value) {
-      WARNING_DIALOG.subtitle =
-        error.e?.response?.data?.message ?? ErrorManager(error.status);
-      showDialog(WARNING_DIALOG, () => null);
+    if (error) {
+      let configDialog = Object.assign({}, WARNING_DIALOG);
+      configDialog.subtitle = error.message;
+
+      showDialog(configDialog);
     }
   }, [error]);
 
-  if (refreshing) {
-    return (
-      <View style={styles.listLoading}>
-        <LottieView
-          width={150}
-          height={150}
-          source={require('../../../../assets/animations/circular.json')}
-          autoPlay
-          loop
-        />
-      </View>
-    );
-  }
-
-  if (error.value || sensors.length == 0) {
+  if (sensors.length == 0) {
     return (
       <ListEmptyComp
         icon={'icon_sensor'}
         handleRefresh={onRefresh}
-        message={
-          error.value
-            ? 'Ocurrio un error al momento de cargar los sensores'
-            : 'No se encontraron sensores'
-        }
+        message={i18n.t('GatewayDetail.EmptySensors')}
       />
     );
   }
@@ -107,28 +74,27 @@ function ListSensors(props) {
                 />
               </View>
               <View style={styles.infoContainer}>
-                <Text style={styles.txtTitleInfo}>Numero de serie</Text>
+                <Text style={styles.txtTitleInfo}>
+                  {i18n.t('GatewayDetail.SerialNumber')}
+                </Text>
                 <Text style={styles.txtInfoSerial}>{item.serialNumber}</Text>
                 <Text style={styles.txtInfoType}>{item.sensorTypeName}</Text>
               </View>
               <View style={styles.optionsContainer}>
                 <TouchableOpacity
                   style={styles.btnOption}
-                  onPress={() => handleEdit(item)}>
+                  onPress={handleEdit(item)}>
                   <BlegIcon name="icon_edit" color={'#17A0A3'} size={20} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.btnOption}
-                  onPress={() => handleRemove(item)}>
+                  onPress={handleRemove(item)}>
                   <BlegIcon name="icon_erase" color={'#17A0A3'} size={20} />
                 </TouchableOpacity>
               </View>
             </View>
           );
         }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
       />
     </>
   );
@@ -137,7 +103,6 @@ function ListSensors(props) {
 const styles = StyleSheet.create({
   contentContainer: {flexGrow: 1, justifyContent: 'center'},
   list: {flex: 1},
-  listLoading: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   txtListEmpty: {fontSize: 16, color: '#C2CACE', marginTop: 10},
   item: {
     height: 90,

@@ -2,8 +2,9 @@ import {useSelector, useDispatch} from 'react-redux';
 import {createDialog, resetDialog} from '../redux/slices/dialog';
 
 let resolveCallback;
+
 function useDialog() {
-  const dialogState = useSelector(store => store.dialog);
+  const dialogState = useSelector(state => state.dialog);
   const dispatcher = useDispatch();
 
   const onAcceptDialog = () => {
@@ -27,7 +28,21 @@ function useDialog() {
     dispatcher(resetDialog());
   };
 
-  return {dialogState, acceptDialog, onAcceptDialog, onCancelDialog};
+  const showDialog = async (config, action = () => null) => {
+    const isAccept = await acceptDialog(config);
+
+    if (isAccept) {
+      action();
+    }
+  };
+
+  return {
+    dialogState,
+    acceptDialog,
+    showDialog,
+    onAcceptDialog,
+    onCancelDialog,
+  };
 }
 
 export default useDialog;

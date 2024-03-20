@@ -10,6 +10,9 @@ import {
   Dimensions,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
+import {useSelector} from 'react-redux';
+import {i18n} from '../../../assets/locale/i18n';
+import {selectGateway} from '../../../redux/slices/gatewaySlice';
 import {
   getSensorType,
   getSensorConfig,
@@ -27,11 +30,11 @@ import {
   validateMacAddress,
   validateSerialNumber,
 } from '../../../utils/Common';
-import ErrorManager from '../../../utils/ErrorManager';
 import {OK_DIALOG, WARNING_DIALOG} from '../../../utils/Constants';
 
 function SensorRegisterScreen(props) {
-  const {gateway, sensorScanned, setSensorScanned} = useGlobalContext();
+  const gateway = useSelector(selectGateway);
+  const {sensorScanned, setSensorScanned} = useGlobalContext();
   const [serialNumber, setSerialNumber] = useState('');
   const [macAddress, setMacAddress] = useState('');
   const [reference, setReference] = useState('');
@@ -40,17 +43,17 @@ function SensorRegisterScreen(props) {
   const [typeSensor, setTypeSensor] = useState(null);
   const [parameters, setParameters] = useState([]);
   const [listConfig, setListConfig] = useState([]);
-  const {acceptDialog} = useDialog();
-  const {loading, error, callEnpoint} = useApiRequest();
+  const {showDialog} = useDialog();
+  const {loading, error, callEndpoint} = useApiRequest();
 
   const handleReturn = () => {
     setSensorScanned(null);
-    props.navigation.replace('GatewayDetailScreen');
+    props.navigation.replace('GatewayDetailScreen', {gatewayId: gateway.id});
   };
 
   const changeTypeSensor = async selectValue => {
     setTypeSensor(selectValue(typeSensor));
-    const response = await callEnpoint(
+    const response = await callEndpoint(
       getSensorConfig(selectValue(typeSensor)),
     );
     if (response) {
@@ -59,7 +62,7 @@ function SensorRegisterScreen(props) {
   };
 
   const refreshTypesSensor = async () => {
-    const response = await callEnpoint(getSensorType());
+    const response = await callEndpoint(getSensorType());
     if (response) {
       const tempTypes = [];
       response.map(type => {
@@ -83,7 +86,7 @@ function SensorRegisterScreen(props) {
       typeSensor != null &&
       parameters.length == listConfig.length
     ) {
-      const response = await callEnpoint(
+      const response = await callEndpoint(
         createSensor({
           serialNumber: serialNumber,
           mac: macAddress,
@@ -94,22 +97,21 @@ function SensorRegisterScreen(props) {
         }),
       );
       if (response) {
-        OK_DIALOG.subtitle = response.message;
-        showDialog(OK_DIALOG, () => {
+        let configDialog = Object.assign({}, OK_DIALOG);
+        configDialog.subtitle = response.message;
+
+        showDialog(configDialog, () => {
           setSensorScanned(null);
-          props.navigation.replace('GatewayDetailScreen');
+          props.navigation.replace('GatewayDetailScreen', {
+            gatewayId: gateway.id,
+          });
         });
       }
     } else {
-      showToastMessage('didcomWarningToast', 'Llena todos los campos');
-    }
-  };
-
-  const showDialog = async (config, action) => {
-    const isAccept = await acceptDialog(config);
-
-    if (isAccept) {
-      action();
+      showToastMessage(
+        'didcomWarningToast',
+        i18n.t('SensorRegister.EmptyFields'),
+      );
     }
   };
 
@@ -117,6 +119,7 @@ function SensorRegisterScreen(props) {
     if (sensorScanned) {
       const serialNumber$ = sensorScanned.serialNumber.split(';');
       const macAddress$ = sensorScanned.mac.match(/.{1,2}/g).join(':');
+
       setSerialNumber(serialNumber$[0]);
       setMacAddress(macAddress$);
       setTypeSensor(sensorScanned.sensorTypeId);
@@ -127,10 +130,11 @@ function SensorRegisterScreen(props) {
   }, []);
 
   useEffect(() => {
-    if (error.value) {
-      WARNING_DIALOG.subtitle =
-        error.e?.response?.data?.message ?? ErrorManager(error.status);
-      showDialog(WARNING_DIALOG, () => null);
+    if (error) {
+      let configDialog = Object.assign({}, WARNING_DIALOG);
+      configDialog.subtitle = error.message;
+
+      showDialog(configDialog);
     }
   }, [error]);
 
@@ -139,15 +143,21 @@ function SensorRegisterScreen(props) {
       <LoadingModal visible={loading} />
 
       <View style={Styles.mainContent}>
-        <HeaderComp title={'Agregar sensor'} handleReturn={handleReturn} />
+        <HeaderComp
+          title={i18n.t('SensorRegister.TitleHeader')}
+          handleReturn={handleReturn}
+        />
+
         <SafeAreaView style={Styles.safeAreaView}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={Styles.formContent}>
               {/*Serial Number*/}
-              <Text style={Styles.txtTitleField}>No. Serie sensor</Text>
+              <Text style={Styles.txtTitleField}>
+                {i18n.t('SensorRegister.SerialNumber')}
+              </Text>
               <TextInput
                 style={Styles.txtInputField}
-                placeholder={'Ingrese numero serial'}
+                placeholder={i18n.t('SensorRegister.InputSerialNumber')}
                 placeholderTextColor={'#5F6F7E'}
                 keyboardType={'default'}
                 maxLength={17}
@@ -155,33 +165,39 @@ function SensorRegisterScreen(props) {
                 onChangeText={setSerialNumber}
               />
               <Text style={Styles.txtDescriptionField}>
-                Ingrese el numero serial del dispositivo (17 digitos)
+                {i18n.t('SensorRegister.InputSerialNumberSensor')}
               </Text>
               {/*MAC Address*/}
-              <Text style={Styles.txtTitleField}>Direccion MAC</Text>
+              <Text style={Styles.txtTitleField}>
+                {i18n.t('SensorRegister.MacAddress')}
+              </Text>
               <TextInput
                 style={Styles.txtInputField}
-                placeholder={'Ingrese direccion MAC'}
+                placeholder={i18n.t('SensorRegister.InputMacAddress')}
                 placeholderTextColor={'#5F6F7E'}
                 keyboardType={'default'}
                 value={macAddress}
                 onChangeText={setMacAddress}
               />
               <Text style={Styles.txtDescriptionField}>
-                Ingrese la direccion mac en formato 00:00:00:00:00:00
+                {i18n.t('SensorRegister.MessageMacAddress')}
               </Text>
               {/*Reference*/}
-              <Text style={Styles.txtTitleField}>Referencia</Text>
+              <Text style={Styles.txtTitleField}>
+                {i18n.t('SensorRegister.Reference')}
+              </Text>
               <TextInput
                 style={Styles.txtInputField}
-                placeholder={'Ingrese referencia'}
+                placeholder={i18n.t('SensorRegister.InputReference')}
                 placeholderTextColor={'#5F6F7E'}
                 keyboardType={'default'}
                 value={reference}
                 onChangeText={setReference}
               />
               {/*Sensor type*/}
-              <Text style={Styles.txtTitleField}>Tipo de sensor</Text>
+              <Text style={Styles.txtTitleField}>
+                {i18n.t('SensorRegister.TypeSensor')}
+              </Text>
               {sensorScanned ? (
                 <Text style={Styles.txtTypeSensor}>
                   {sensorScanned.sensorType.name}
@@ -203,7 +219,7 @@ function SensorRegisterScreen(props) {
                 <>
                   <View style={Styles.lineSeparator} />
                   <Text style={Styles.txtTitleParameters}>
-                    Configurar parámetros
+                    {i18n.t('SensorRegister.Parameters')}
                   </Text>
                   {parameters.map((param, index) => {
                     return (
@@ -220,7 +236,9 @@ function SensorRegisterScreen(props) {
               {/*Button*/}
               <View style={Styles.buttonFormContent}>
                 <TouchableOpacity style={Styles.btnForm} onPress={handleSave}>
-                  <Text style={Styles.txtButtonForm}>Agregar</Text>
+                  <Text style={Styles.txtButtonForm}>
+                    {i18n.t('SensorRegister.Add')}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

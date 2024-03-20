@@ -5,6 +5,7 @@ import {
   useCameraDevice,
   useCodeScanner,
 } from 'react-native-vision-camera';
+import {i18n} from '../../assets/locale/i18n';
 import {validateSensor} from '../../services/remote/SensorServices';
 import {validateGateway} from '../../services/remote/GatewayServices';
 import useApiRequest from '../../hooks/useApiRequest';
@@ -21,8 +22,8 @@ function QrScannerScreen(props) {
   const [isScanned, setIsScanned] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
   const [torch, setTorch] = useState('off');
-  const {acceptDialog} = useDialog();
-  const {loading, error, callEnpoint} = useApiRequest();
+  const {showDialog} = useDialog();
+  const {loading, error, callEndpoint} = useApiRequest();
 
   const device = useCameraDevice('back');
   const codeScanner = useCodeScanner({
@@ -52,7 +53,8 @@ function QrScannerScreen(props) {
   };
 
   const getValidateSensor = async code => {
-    const response = await callEnpoint(validateSensor(code));
+    console.log(code);
+    const response = await callEndpoint(validateSensor(code));
     if (response) {
       setSensorScanned(response);
       props.navigation.replace('SensorRegisterScreen');
@@ -62,20 +64,12 @@ function QrScannerScreen(props) {
   const getValidateGateway = async code => {
     const codeArray = code.split(';');
     const serialNumber = codeArray[0];
-    const response = await callEnpoint(
+    const response = await callEndpoint(
       validateGateway(serialNumber, userSession.database),
     );
     if (response) {
       setGateway(response);
       props.navigation.replace('GatewayRegisterScreen', {lastScreen: 'qr'});
-    }
-  };
-
-  const showDialog = async (config, action) => {
-    const isAccept = await acceptDialog(config);
-
-    if (isAccept) {
-      action();
     }
   };
 
@@ -87,9 +81,11 @@ function QrScannerScreen(props) {
   }, []);
 
   useEffect(() => {
-    if (error.value) {
-      WARNING_DIALOG.subtitle = error.e?.response?.data?.message;
-      showDialog(WARNING_DIALOG, () => {
+    if (error) {
+      let configDialog = Object.assign({}, WARNING_DIALOG);
+      configDialog.subtitle = error.message;
+
+      showDialog(configDialog, () => {
         setIsScanned(true);
       });
     }
@@ -117,7 +113,7 @@ function QrScannerScreen(props) {
       <View style={Styles.container}>
         <View style={Styles.headerContainer}>
           <Text style={Styles.txtTitleHeader}>
-            Coloca la camara sobre el QR
+            {i18n.t('QrScanner.TitleHeader')}
           </Text>
         </View>
         <View style={Styles.topContainer} />

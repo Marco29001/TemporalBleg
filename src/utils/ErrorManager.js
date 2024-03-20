@@ -11,7 +11,11 @@ export default function ErrorManager(status) {
       message = 'No encontrado';
       break;
     case -1:
-      message = 'Sin conexion a internet';
+      message = 'Sin conexión a internet';
+      break;
+    default:
+      message = 'Ocurrió un error';
+      break;
   }
   return message;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {i18n} from '../../assets/locale/i18n';
 import LocalStorage from '../../services/local/LocalStorage';
 import usePermissions from '../../hooks/usePermission';
 import BlegIcon from '../../assets/icons/customIcons/BlegIcon';
@@ -20,21 +21,17 @@ function PermissionScreen(props) {
   return (
     <View style={Styles.mainContainer}>
       <View style={Styles.headerContainer}>
-        <Text style={Styles.txtTitle}>Permisos de usuario</Text>
+        <Text style={Styles.txtTitle}>{i18n.t('Permissions.TitleHeader')}</Text>
       </View>
       <View style={Styles.infoContainer}>
-        <Text style={Styles.txtSubtitle}>
-          Se solicitaran los permisos siguientes para la correcta funcionalidad
-          de la applicacion:
-        </Text>
+        <Text style={Styles.txtSubtitle}>{i18n.t('Permissions.Subtitle')}</Text>
         <View style={Styles.listDescriptionContainer}>
           <View style={Styles.descriptionContainer}>
             <View style={Styles.iconDescription}>
               <BlegIcon name="icon_qr" color={'#17A0A3'} size={30} />
             </View>
             <Text style={Styles.txtDescription}>
-              Se solicitara el uso de la camara para la lectura de codigos QR al
-              momento de registrar un bleg o sensores
+              {i18n.t('Permissions.PermissionQr')}
             </Text>
           </View>
           <View style={Styles.descriptionContainer}>
@@ -42,9 +39,7 @@ function PermissionScreen(props) {
               <IconGps width={60} height={60} />
             </View>
             <Text style={Styles.txtDescription}>
-              Se solicitara el acceso a tu ubicacion actual para brindarte un
-              mejor servicio en la deteccion de dispositivos bluetooth y esta no
-              sera compartida en ningun momento
+              {i18n.t('Permissions.PermissionLocation')}
             </Text>
           </View>
           <View style={Styles.descriptionContainer}>
@@ -52,20 +47,17 @@ function PermissionScreen(props) {
               <BlegIcon name="icon_bluetooth" color={'#17A0A3'} size={30} />
             </View>
             <Text style={Styles.txtDescription}>
-              Se solicitara el acceso al bluetooth para brindarte un mejor
-              servicio (puede que esto no se te solicite solo si tu dispositivo
-              no cuenta con android 12 o superior)
+              {i18n.t('Permissions.PermissionBluetooth')}
             </Text>
           </View>
         </View>
       </View>
       <View style={Styles.footerContainer}>
         <TouchableOpacity style={Styles.btnNext} onPress={getPermissions}>
-          <Text style={Styles.txtBtnNext}>Siguiente</Text>
+          <Text style={Styles.txtBtnNext}>{i18n.t('Permissions.Next')}</Text>
         </TouchableOpacity>
         <Text style={Styles.txtDescription}>
-          Usted puede realizar cambios despues en la configuracion del
-          dispositivo
+          {i18n.t('Permissions.WarningFooter')}
         </Text>
       </View>
     </View>

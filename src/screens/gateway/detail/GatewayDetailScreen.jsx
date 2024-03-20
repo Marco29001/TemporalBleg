@@ -1,24 +1,37 @@
 import React, {useState, useEffect} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {useGlobalContext} from '../../../context/GlobalContext';
-import {getGatewayById} from '../../../services/remote/GatewayServices';
+import {useDispatch} from 'react-redux';
+import {i18n} from '../../../assets/locale/i18n';
+import {
+  getGatewayById,
+  synchronizeGateway,
+  CheckVersionSynchronize,
+} from '../../../services/remote/GatewayServices';
 import useApiRequest from '../../../hooks/useApiRequest';
+import useDialog from '../../../hooks/useDialog';
+import {createGateway} from '../../../redux/slices/gatewaySlice';
 import HeaderComp from '../../../components/HeaderComp';
 import RegisterModal from '../../../components/RegisterModal';
+import Loading from './components/Loading';
 import ListSensors from './components/ListSensors';
 import BlegIcon from '../../../assets/icons/customIcons/BlegIcon';
-import {showToastMessage} from '../../../utils/Common';
+import {showToastMessage, dateFormat} from '../../../utils/Common';
+import {OK_DIALOG, WARNING_DIALOG} from '../../../utils/Constants';
+import {useGlobalContext} from '../../../context/GlobalContext';
 
 function GatewayDetailScreen(props) {
-  const {gateway} = useGlobalContext();
-  const [sensors, setSensors] = useState([]);
+  const {gateway, setGateway} = useGlobalContext();
+  const dispatch = useDispatch();
   const [modalRegister, setModalRegister] = useState(false);
-  const {loading, error, callEnpoint} = useApiRequest();
+  const [loadSync, setLoadSync] = useState(false);
+  const {showDialog} = useDialog();
+  const {loading, error, callEndpoint} = useApiRequest();
 
-  const refreshSensors = async () => {
-    const response = await callEnpoint(getGatewayById(gateway?.id));
+  const refreshGateway = async () => {
+    const response = await callEndpoint(getGatewayById(gateway.id));
     if (response) {
-      setSensors(response.sensors);
+      setGateway(response);
+      console.log(response);
     }
   };
 
@@ -31,88 +44,197 @@ function GatewayDetailScreen(props) {
   };
 
   const handleRegister = () => {
+    dispatch(createGateway(gateway.gateway));
     setModalRegister(!modalRegister);
   };
 
+  const getSynchronizeGateway = async () => {
+    setLoadSync(true);
+    const response = await callEndpoint(
+      synchronizeGateway(gatewayId, gateway.device.id),
+    );
+    if (response) {
+      setLongPolling(response.messageId, response.version);
+    }
+  };
+
+  const setLongPolling = async (messageId, version) => {
+    const response = await callEndpoint(
+      CheckVersionSynchronize(gatewayId, gateway.device.id, messageId, version),
+    );
+
+    if (response) {
+      let configDialogOk = Object.assign({}, OK_DIALOG);
+      let configDialogWarning = Object.assign({}, WARNING_DIALOG);
+
+      switch (response.code) {
+        case 1:
+          const tempGateway = Object.assign({}, gateway);
+          tempGateway.gateway.isSynchronized = true;
+          tempGateway.gateway.lastUpdate = response.lastUpdateString;
+          setGateway(tempGateway);
+
+          setLoadSync(false);
+          configDialogOk.subtitle = i18n.t('GatewayDetail.UpdatedSynchronize');
+          showDialog(configDialogOk);
+          break;
+        case 2:
+        case 3:
+        case 4:
+          setLoadSync(false);
+          configDialogWarning.subtitle = i18n.t(
+            'GatewayDetail.ErrorSynchronize',
+          );
+          showDialog(configDialogWarning);
+          break;
+        case 5:
+          setLoadSync(false);
+          configDialogWarning.subtitle = i18n.t(
+            'GatewayDetail.ModulesLastVersion',
+          );
+          showDialog(configDialogWarning);
+          break;
+        case 6:
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          setLongPolling(messageId, version);
+          break;
+        case 7:
+          setLoadSync(false);
+          configDialogWarning.subtitle = i18n.t('GatewayDetail.TimeExpired');
+          showDialog(configDialogWarning);
+          break;
+      }
+    }
+  };
+
   useEffect(() => {
-    refreshSensors();
+    refreshGateway();
   }, []);
 
   useEffect(() => {
-    if (error.value) {
-      showToastMessage(
-        'didcomErrorToast',
-        error.e?.response.data.message || 'Sin conexion',
-      );
-      props.navigation.replace('TabBarNavigator');
+    if (error) {
+      showToastMessage('didcomErrorToast', error.message);
     }
   }, [error]);
 
   return (
-    <>
-      <View style={Styles.mainContainer}>
-        <HeaderComp title={'Detalle Bleg'} handleReturn={handleReturn} />
-        <View style={Styles.formContainer}>
-          {/* Gateway section */}
-          <Text style={Styles.txtTitleForm}>No.Serie Bleg</Text>
-          <Text style={Styles.txtInfoForm}>{gateway?.serialNumber}</Text>
-          <View style={Styles.lineSeparator} />
-          {/* Vehicle section */}
-          <View style={Styles.titleVehicleContainer}>
-            <Text style={Styles.txtTitleForm}>Vehiculo asignado</Text>
-            <TouchableOpacity
-              style={Styles.editButton}
-              onPress={handleEditDevice}>
-              <BlegIcon name="icon_edit" color={'#17A0A3'} size={25} />
-            </TouchableOpacity>
+    <View style={styles.mainContainer}>
+      <HeaderComp
+        title={i18n.t('GatewayDetail.TitleHeader')}
+        handleReturn={handleReturn}
+      />
+
+      {loading || loadSync || gateway['isSynchronized'] !== undefined ? (
+        <Loading />
+      ) : (
+        <>
+          <View
+            style={[
+              styles.synchronizeInfoContainer,
+              {
+                backgroundColor: gateway.gateway.isSynchronized
+                  ? '#1ABC9C'
+                  : '#ED8302',
+              },
+            ]}>
+            <Text style={styles.txtSynchronizeInfo}>
+              {gateway.gateway.isSynchronized
+                ? i18n.t('GatewayDetail.Synchronized')
+                : i18n.t('GatewayDetail.NotSynchronized')}
+              {i18n.t('GatewayDetail.LastSynchronized') + ': '}
+              {dateFormat(gateway.gateway.lastUpdate)}
+            </Text>
           </View>
-          <View style={Styles.vehicleContainer}>
-            <View style={Styles.infoVehicle}>
-              <Text style={Styles.txtTitleInfo}>Unidad:</Text>
-              <Text style={Styles.txtInfoVehicle}>
-                {gateway?.device?.name ?? ''}
+          <View style={styles.formContainer}>
+            {/* Gateway section */}
+            <Text style={styles.txtTitleForm}>
+              {i18n.t('GatewayDetail.NoSerieBleg')}
+            </Text>
+            <Text style={styles.txtInfoForm}>
+              {gateway.gateway.serialNumber}
+            </Text>
+            <View style={styles.lineSeparator} />
+            {/* Vehicle section */}
+            <View style={styles.titleVehicleContainer}>
+              <Text style={styles.txtTitleForm}>
+                {i18n.t('GatewayDetail.VehicleAssigned')}
               </Text>
-              <Text style={Styles.txtTitleInfo}>No.Serie GO:</Text>
-              <Text style={Styles.txtInfoVehicle}>
-                {gateway?.device?.serialNumber ?? ''}
-              </Text>
-            </View>
-            <View style={Styles.vehicleIcon}>
-              <BlegIcon name="icon_bus" color={'#17A0A3'} size={40} />
-            </View>
-          </View>
-          <View style={Styles.lineSeparator} />
-          {/* Sensors section */}
-          <View style={Styles.titleSensorsContainer}>
-            <Text style={Styles.txtTitleForm}>Sensores</Text>
-            <View style={Styles.addButtonContainer}>
-              <TouchableOpacity onPress={handleRegister}>
-                <BlegIcon name="icon_plus" color={'#00317F'} size={25} />
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={handleEditDevice}>
+                <BlegIcon name="icon_edit" color={'#17A0A3'} size={25} />
               </TouchableOpacity>
             </View>
+            <View style={styles.vehicleContainer}>
+              <View style={styles.infoVehicle}>
+                <Text style={styles.txtTitleInfo}>
+                  {i18n.t('GatewayDetail.Unit')}
+                </Text>
+                <Text style={styles.txtInfoVehicle}>
+                  {gateway.device.name ?? ''}
+                </Text>
+                <Text style={styles.txtTitleInfo}>
+                  {i18n.t('GatewayDetail.NoSerieGo')}
+                </Text>
+                <Text style={styles.txtInfoVehicle}>
+                  {gateway.device.serialNumber ?? ''}
+                </Text>
+              </View>
+              <View style={styles.vehicleIcon}>
+                <BlegIcon name="icon_bus" color={'#17A0A3'} size={40} />
+              </View>
+            </View>
+            <View style={styles.lineSeparator} />
+            {/* Sensors section */}
+            <View style={styles.titleSensorsContainer}>
+              <Text style={styles.txtTitleForm}>
+                {i18n.t('GatewayDetail.Sensors')}
+              </Text>
+              <View style={styles.addButtonContainer}>
+                <TouchableOpacity onPress={handleRegister}>
+                  <BlegIcon name="icon_plus" color={'#00317F'} size={25} />
+                </TouchableOpacity>
+              </View>
+            </View>
+            <ListSensors
+              {...props}
+              sensors={gateway.sensors}
+              error={error}
+              loading={loading}
+              onRefresh={refreshGateway}
+            />
           </View>
-          <ListSensors
+          <View style={styles.synchronizeContainer}>
+            <TouchableOpacity
+              style={styles.buttonSynchronize}
+              onPress={getSynchronizeGateway}>
+              <BlegIcon name="icon_refresh" color={'#FFFFFF'} size={25} />
+              <Text style={styles.txtButtonSynchronize}>
+                {i18n.t('GatewayDetail.Synchronize')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {/*Modals*/}
+          <RegisterModal
             {...props}
-            sensors={sensors}
-            error={error}
-            refreshing={loading}
-            onRefresh={refreshSensors}
+            visible={modalRegister}
+            type={'sensor'}
+            handleClose={handleRegister}
           />
-        </View>
-        {/*Modals*/}
-        <RegisterModal
-          {...props}
-          visible={modalRegister}
-          type={'sensor'}
-          handleClose={handleRegister}
-        />
-      </View>
-    </>
+        </>
+      )}
+    </View>
   );
 }
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
   mainContainer: {flex: 1, backgroundColor: '#F2F2F7'},
+  synchronizeInfoContainer: {
+    paddingHorizontal: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txtSynchronizeInfo: {fontSize: 16, color: '#FFFFFF', textAlign: 'center'},
   formContainer: {flex: 1, padding: 30},
   txtTitleForm: {
     fontSize: 16,
@@ -151,6 +273,21 @@ const Styles = StyleSheet.create({
   vehicleIcon: {flex: 1, alignItems: 'flex-end', justifyContent: 'center'},
   titleSensorsContainer: {flexDirection: 'row', paddingVertical: 10},
   addButtonContainer: {flex: 1, alignItems: 'flex-end', paddingHorizontal: 15},
+  synchronizeContainer: {flex: 0.1, paddingHorizontal: 10},
+  buttonSynchronize: {
+    flexDirection: 'row',
+    height: 50,
+    backgroundColor: '#003180',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txtButtonSynchronize: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginLeft: 10,
+  },
 });
 
 export default GatewayDetailScreen;

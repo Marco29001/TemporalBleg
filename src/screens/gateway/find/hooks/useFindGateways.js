@@ -2,10 +2,11 @@ import {useState, useEffect, useReducer} from 'react';
 import {BleManager} from 'react-native-ble-plx';
 import {useGlobalContext} from '../../../../context/GlobalContext';
 import useBluetooth from '../../../../hooks/useBluetooth';
-import {convertBase64ToHex} from '../../../../utils/Common';
 import {NAME_GATEWAY} from '../../../../utils/Constants';
+import {convertBase64ToHex} from '../../../../utils/Common';
 
 const manager = new BleManager();
+
 const reducer = (state, action) => {
   const {gateway} = action;
   switch (action.type) {
@@ -43,40 +44,46 @@ function useFindGateways() {
     const isBluetoothEnabled = await validateBluetoothEnabled();
 
     if (isLocationEnabled && isBluetoothEnabled) {
+      //setListGatewaysRealTime([]);
       setScanning(true);
+
       manager.startDeviceScan(null, null, (err, device) => {
         if (err) {
-          console.log('error al escanear bleg', err);
+          console.log('error al escanear Bleg', err);
         }
 
         if (device) {
+          //device.manufacturerData = convertBase64ToHex(device.manufacturerData);
+          //console.log(device.manufacturerData);
+
           if (
             device.manufacturerData &&
             (device.name === NAME_GATEWAY || device.localName === NAME_GATEWAY)
           ) {
-            device.manufacturerData = convertBase64ToHex(
-              device.manufacturerData,
-            );
-            //search gateway in db list and change the properties
-            const gateway = listGateways.find(
-              item => item.mac == device.manufacturerData,
-            );
+            dispatch({type: 'add_gateway', gateway: device});
+          }
 
-            if (gateway) {
+          /*listGateways.map(gateway => {
+            const nameGateway = NAME_GATEWAY + ' ' + gateway.mac;
+
+            if (
+              device?.name == nameGateway ||
+              device?.localName == nameGateway
+            ) {
               device.idDb = gateway.id;
               device.sensors = gateway.totalSensors;
               device.unit = gateway.device;
 
               dispatch({type: 'add_gateway', gateway: device});
             }
-          }
+          });*/
         }
       });
 
       // stop scanning gateways after 20 seconds
       setTimeout(() => {
         stopScanGateways();
-      }, 20000);
+      }, 60000);
     }
   };
 

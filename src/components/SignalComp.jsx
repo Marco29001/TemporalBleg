@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import Signal0 from '../assets/icons/icon_signal0.svg';
 import Signal1 from '../assets/icons/icon_signal1.svg';
 import Signal2 from '../assets/icons/icon_signal2.svg';

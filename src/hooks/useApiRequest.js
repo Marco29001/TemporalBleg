@@ -2,64 +2,68 @@ import {useEffect, useState} from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import {useDispatch} from 'react-redux';
 import {createLogout} from '../redux/slices/logout';
+import ErrorManager from '../utils/ErrorManager';
 
 function useApiRequest() {
   let controller = null;
   const dispatcher = useDispatch();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState({status: null, value: false, e: null});
+  const [error, setError] = useState(null);
 
-  const callEnpoint = async request => {
+  const callEndpoint = async request => {
     let response = null;
     controller = request.controller;
 
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isInternetReachable === false) {
-        cancelEnpoint();
+        cancelEndpoint();
       }
     });
 
     const timeout = setTimeout(() => {
-      cancelEnpoint();
-    }, 60000);
+      cancelEndpoint();
+    }, 60000 * 5);
 
     resetError();
     setLoading(true);
     try {
       const responseServer = await request.call;
       response = responseServer.data;
-      clearTimeout(timeout);
-      unsubscribe();
     } catch (e) {
+      let status = e?.response?.status ?? -1;
+      console.log('error', e);
+      if (status == 401) {
+        dispatcher(createLogout({open: true, unauthorized: true}));
+      } else {
+        console.log('el error es', typeof e?.response?.data?.message);
+        let message = e?.response?.data?.message ?? ErrorManager(status);
+        setError({status, message});
+      }
+    } finally {
       clearTimeout(timeout);
       unsubscribe();
       setLoading(false);
-      setError({status: e?.response?.status || -1, value: true, e: e});
-      if (e?.response?.status == 401) {
-        dispatcher(createLogout({open: true, unauthorized: true}));
-      }
     }
 
-    setLoading(false);
     return response;
   };
 
   const resetError = () => {
-    setError({status: null, value: false});
+    setError(null);
   };
 
-  const cancelEnpoint = () => {
+  const cancelEndpoint = () => {
     setLoading(false);
     controller && controller.abort();
   };
 
   useEffect(() => {
     return () => {
-      cancelEnpoint();
+      cancelEndpoint();
     };
   }, []);
 
-  return {loading, error, callEnpoint, resetError, cancelEnpoint};
+  return {loading, error, callEndpoint, resetError, cancelEndpoint};
 }
 
 export default useApiRequest;

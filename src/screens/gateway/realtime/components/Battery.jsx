@@ -16,7 +16,7 @@ function Battery(props) {
     <Battery2 width={size} height={size} fill={fill} />
   ) : batteryLevel >= 25 && batteryLevel < 50 ? (
     <Battery1 width={size} height={size} fill={fill} />
-  ) : batteryLevel == 0 ? (
+  ) : batteryLevel == 0 || batteryLevel == null ? (
     <Text style={Styles.txtBattery}>-</Text>
   ) : (
     <Battery0 width={size} height={size} fill={fill} />

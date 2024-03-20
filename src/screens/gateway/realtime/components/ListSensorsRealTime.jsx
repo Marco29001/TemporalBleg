@@ -1,12 +1,11 @@
 import React from 'react';
 import {View, FlatList, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {i18n} from '../../../../assets/locale/i18n';
 import Battery from './Battery';
 import SignalComp from '../../../../components/SignalComp';
 import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon';
 
-function ListSensorsRealTime(props) {
-  const {data, handleSensorVariable} = props;
-
+function ListSensorsRealTime({data, handleSensorVariable}) {
   return (
     <FlatList
       style={styles.list}
@@ -18,50 +17,41 @@ function ListSensorsRealTime(props) {
             <View style={styles.sensorInfoContent}>
               <View style={styles.sensorCount}>
                 <Text style={styles.txtSensorCount}>
-                  {'Sensor: ' + item?.name ?? index}
+                  {i18n.t('GatewayRealtime.Sensor')} : {item.NM}
                 </Text>
               </View>
               <View style={styles.macAddress}>
-                <Text style={styles.txtGeneralItem}>{item.macAddress}</Text>
+                <Text style={styles.txtGeneralItem}>{item.MC}</Text>
               </View>
             </View>
             <View style={styles.sensorInfoContent}>
               <View style={styles.infoStatusSensor}>
-                <Battery
-                  batteryLevel={item.batteryLevel}
-                  size={30}
-                  fill={'#17A0A3'}
-                />
+                <Battery batteryLevel={item.BT} size={30} fill={'#17A0A3'} />
                 <Text style={styles.txtGeneralItem}>
-                  {item.batteryLevel != 0 ? item.batteryLevel + ' %' : ''}
+                  {item.BT != 0 && item.BT ? item.BT + ' %' : ''}
                 </Text>
               </View>
               <View style={styles.infoStatusSensor}>
-                <SignalComp
-                  signalRssi={item.signalDbm.match(/-?\d+/)[0] * -1}
-                  size={25}
-                />
-                <Text style={styles.txtGeneralItem}>{item.signalDbm}</Text>
+                <SignalComp signalRssi={item.SG} size={25} />
+                <Text style={styles.txtGeneralItem}>{item.SG * -1}</Text>
               </View>
               <View style={styles.infoStatusSensor}>
                 <BlegIcon name="icon_clock" color={'#97A4B0'} size={25} />
-                <Text style={styles.txtGeneralItem}>{item.lastSeen}</Text>
+                <Text style={styles.txtGeneralItem}>{item.LA}</Text>
               </View>
             </View>
-            {item.data.map((obj, index) => {
+            {item.variables.map((variable, index) => {
               return (
                 <View key={index}>
-                  {index != item.data.length ? (
+                  {index != item.variables.length ? (
                     <View style={styles.lineSeparator} />
                   ) : null}
                   <TouchableOpacity
                     style={styles.infoTypeSensor}
-                    onPress={() =>
-                      handleSensorVariable(item.macAddress, obj.id)
-                    }>
-                    <Text style={styles.txtInfoType}>{obj?.name}</Text>
+                    onPress={handleSensorVariable(item.MC, variable.id)}>
+                    <Text style={styles.txtInfoType}>{variable.name}</Text>
                     <Text style={styles.txtInfoType}>
-                      {obj.value + ' ' + obj.unit}
+                      {variable.value + ' ' + variable.unit}
                     </Text>
                     <View style={styles.btnNext}>
                       <BlegIcon name="icon_next" color={'#17A0A3'} size={20} />
@@ -73,7 +63,8 @@ function ListSensorsRealTime(props) {
             <View style={styles.lineSeparator} />
             <View style={styles.referenceContainer}>
               <Text style={styles.txtReference}>
-                {'Referencia: ' + item?.reference ?? ''}
+                {i18n.t('GatewayRealtime.Reference') + ' ' + item?.reference ??
+                  ''}
               </Text>
             </View>
           </View>

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import {i18n} from '../../../assets/locale/i18n';
 import {useGlobalContext} from '../../../context/GlobalContext';
 import {
   createGateway,
@@ -18,7 +19,6 @@ import HeaderComp from '../../../components/HeaderComp';
 import LoadingModal from '../../../components/LoadingModal';
 import BlegIcon from '../../../assets/icons/customIcons/BlegIcon';
 import {showToastMessage} from '../../../utils/Common';
-import ErrorManager from '../../../utils/ErrorManager';
 import {OK_DIALOG, WARNING_DIALOG} from '../../../utils/Constants';
 
 function GatewayRegisterScreen(props) {
@@ -29,8 +29,8 @@ function GatewayRegisterScreen(props) {
   const [showUnitsModal, setShowUnitsModal] = useState(false);
   const [unit, setUnit] = useState(null);
   const [validate, setValidate] = useState(true);
-  const {acceptDialog} = useDialog();
-  const {loading, error, callEnpoint} = useApiRequest();
+  const {showDialog} = useDialog();
+  const {loading, error, callEndpoint} = useApiRequest();
 
   const handleReturn = () => {
     if (lastScreen == 'detail') {
@@ -49,26 +49,28 @@ function GatewayRegisterScreen(props) {
 
   const handleValidate = async () => {
     if (serieGateway != '') {
-      const response = await callEnpoint(
+      const response = await callEndpoint(
         validateGateway(serieGateway, userSession.database),
       );
       if (response) {
-        OK_DIALOG.subtitle = 'El numero de serie del bleg es valido';
+        let configDialog = Object.assign({}, OK_DIALOG);
+        configDialog.subtitle = i18n.t('GatewayRegister.ValidSerialNumber');
+
+        showDialog(configDialog);
         setGateway(response);
         setValidate(false);
-        showDialog(OK_DIALOG, () => null);
       }
     } else {
       showToastMessage(
         'didcomWarningToast',
-        'Escribe el numero de serie por favor',
+        i18n.t('GatewayRegister.EmptySerialNumber'),
       );
     }
   };
 
   const handleSave = async () => {
     if (unit && serieGateway != '') {
-      const response = await callEnpoint(
+      const response = await callEndpoint(
         createGateway({
           SerialNumber: serieGateway,
           VehicleId: unit.id,
@@ -77,14 +79,26 @@ function GatewayRegisterScreen(props) {
         }),
       );
       if (response) {
-        OK_DIALOG.subtitle = response.message;
-        showDialog(OK_DIALOG, () => {
-          setGateway(null);
-          props.navigation.replace('TabBarNavigator');
+        let configDialog = Object.assign({}, OK_DIALOG);
+        configDialog.subtitle = response.message;
+
+        showDialog(configDialog, () => {
+          switch (lastScreen) {
+            case 'detail':
+              props.navigation.replace('GatewayDetailScreen');
+              break;
+            case 'qr':
+              setGateway(null);
+              props.navigation.replace('TabBarNavigator');
+              break;
+          }
         });
       }
     } else {
-      showToastMessage('didcomErrorToast', 'Llena todos los campos por favor');
+      showToastMessage(
+        'didcomErrorToast',
+        i18n.t('GatewayRegister.EmptyFields'),
+      );
     }
   };
 
@@ -95,14 +109,6 @@ function GatewayRegisterScreen(props) {
   const handleSelectUnit = item => {
     setUnit(item);
     handleShowUnitsModal();
-  };
-
-  const showDialog = async (config, action) => {
-    const isAccept = await acceptDialog(config);
-
-    if (isAccept) {
-      action();
-    }
   };
 
   useEffect(() => {
@@ -118,16 +124,11 @@ function GatewayRegisterScreen(props) {
   }, []);
 
   useEffect(() => {
-    if (error.value) {
-      WARNING_DIALOG.subtitle =
-        error.e?.response?.data?.message ?? ErrorManager(error.status);
-      showDialog(WARNING_DIALOG, () => {
-        if (lastScreen == 'detail') {
-          gateway.device = unit;
-          setGateway(gateway);
-          props.navigation.replace('GatewayDetailScreen');
-        }
-      });
+    if (error) {
+      let configDialog = Object.assign({}, WARNING_DIALOG);
+      configDialog.subtitle = error.message;
+
+      showDialog(configDialog);
     }
   }, [error]);
 
@@ -136,13 +137,19 @@ function GatewayRegisterScreen(props) {
       <LoadingModal visible={loading} />
 
       <View style={Styles.mainContainer}>
-        <HeaderComp title={'Asignar Bleg'} handleReturn={handleReturn} />
+        <HeaderComp
+          title={i18n.t('GatewayRegister.TitleHeader')}
+          handleReturn={handleReturn}
+        />
+
         <View style={Styles.formContainer}>
-          <Text style={Styles.txtTitleForm}>No. Serie Bleg</Text>
+          <Text style={Styles.txtTitleForm}>
+            {i18n.t('GatewayRegister.NoSerieBleg')}
+          </Text>
           <TextInput
             style={Styles.inputForm}
             editable={editSerie}
-            placeholder={'No.Serie Bleg'}
+            placeholder={i18n.t('GatewayRegister.NoSerieBleg')}
             placeholderTextColor={'#5F6F7E'}
             keyboardType={'default'}
             value={serieGateway}
@@ -151,32 +158,40 @@ function GatewayRegisterScreen(props) {
           <View style={Styles.btnFormContainer}>
             {validate && (
               <TouchableOpacity style={Styles.btnForm} onPress={handleValidate}>
-                <Text style={Styles.txtButtonForm}>Validar</Text>
+                <Text style={Styles.txtButtonForm}>
+                  {i18n.t('GatewayRegister.Validate')}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
           <View style={Styles.lineSeparator} />
-          <Text style={Styles.txtTitleForm}>Selecciona una unidad</Text>
+          <Text style={Styles.txtTitleForm}>
+            {i18n.t('GatewayRegister.SelectUnit')}
+          </Text>
           <View style={Styles.selectUnitContainer}>
             <TouchableOpacity
               style={Styles.btnUnitSelect}
               onPress={handleShowUnitsModal}>
               <View style={Styles.titleUnitContiner}>
-                <Text style={Styles.txtSelectButton}>Unidad</Text>
+                <Text style={Styles.txtSelectButton}>
+                  {i18n.t('GatewayRegister.Unit')}
+                </Text>
                 <View style={Styles.arrowContainer}>
                   <BlegIcon name="icon_next" color={'#17A0A3'} size={20} />
                 </View>
               </View>
               <View style={Styles.lineSeparator} />
               <Text style={Styles.txtUnitSelect}>
-                {unit ? unit.serialNumber : 'No.Serie GO'}
+                {unit ? unit.serialNumber : i18n.t('GatewayRegister.NoSerieGo')}
               </Text>
             </TouchableOpacity>
           </View>
           <View style={Styles.btnFormContainer}>
             {!validate && (
               <TouchableOpacity style={Styles.btnForm} onPress={handleSave}>
-                <Text style={Styles.txtButtonForm}>Asignar</Text>
+                <Text style={Styles.txtButtonForm}>
+                  {i18n.t('GatewayRegister.Assign')}
+                </Text>
               </TouchableOpacity>
             )}
           </View>

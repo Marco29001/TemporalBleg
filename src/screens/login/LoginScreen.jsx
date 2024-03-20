@@ -1,18 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  Image,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import {View, Image, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {i18n} from '../../assets/locale/i18n';
 import {getAuth} from '../../services/remote/AuthServices';
 import {useGlobalContext} from '../../context/GlobalContext';
 import useApiRequest from '../../hooks/useApiRequest';
 import LoadingModal from '../../components/LoadingModal';
 import CustomTextInput from '../../components/CustomTextInput';
 import {showToastMessage} from '../../utils/Common';
-import ErrorManager from '../../utils/ErrorManager';
 import Images from '../../assets/images/Images';
 
 function LoginScreen(props) {
@@ -25,7 +19,7 @@ function LoginScreen(props) {
   const arrayInputs = [
     {
       icon: 'icon_user',
-      placeHolder: 'Usuario',
+      placeHolder: i18n.t('Login.User'),
       property: 'email',
       keyboardType: 'default',
       value: values.email,
@@ -33,7 +27,7 @@ function LoginScreen(props) {
     },
     {
       icon: 'icon_password',
-      placeHolder: 'Contraseña',
+      placeHolder: i18n.t('Login.Password'),
       property: 'password',
       keyboardType: 'default',
       value: values.password,
@@ -41,7 +35,7 @@ function LoginScreen(props) {
     },
     {
       icon: 'icon_database',
-      placeHolder: 'Base de datos',
+      placeHolder: i18n.t('Login.Database'),
       property: 'database',
       keyboardType: 'default',
       value: values.database,
@@ -49,7 +43,7 @@ function LoginScreen(props) {
     },
   ];
   const {saveUserSession} = useGlobalContext();
-  const {loading, error, resetError, callEnpoint} = useApiRequest();
+  const {loading, error, resetError, callEndpoint} = useApiRequest();
 
   const onChangeValues = (property, value) => {
     resetError();
@@ -62,7 +56,7 @@ function LoginScreen(props) {
 
   const handleLogin = async () => {
     if (validateForm()) {
-      const response = await callEnpoint(
+      const response = await callEndpoint(
         getAuth(values.email, values.password, values.database),
       );
       if (response) {
@@ -74,7 +68,7 @@ function LoginScreen(props) {
 
   const validateForm = () => {
     if (values.email == '' || values.password == '' || values.database == '') {
-      showToastMessage('didcomWarningToast', 'Llena todos los campos');
+      showToastMessage('didcomWarningToast', i18n.t('Messages.EmptyFields'));
       return false;
     }
 
@@ -82,8 +76,8 @@ function LoginScreen(props) {
   };
 
   useEffect(() => {
-    if (error.value && error.status != 401) {
-      showToastMessage('didcomErrorToast', ErrorManager(error.status));
+    if (error && error?.status != 401) {
+      showToastMessage('didcomErrorToast', error.message);
     }
   }, [error]);
 
@@ -97,7 +91,9 @@ function LoginScreen(props) {
         </View>
         <View style={LoginStyle.bodyLoginContainer}>
           <View style={LoginStyle.headerBodyContainer}>
-            <Text style={LoginStyle.txtTitleBody}>Inicio de Sesión</Text>
+            <Text style={LoginStyle.txtTitleBody}>
+              {i18n.t('Login.SignIn')}
+            </Text>
           </View>
           <View style={LoginStyle.centerBodyContainer}>
             {arrayInputs.map((input, index) => {
@@ -110,7 +106,7 @@ function LoginScreen(props) {
                   keyboardType={input.keyboardType}
                   value={input.value}
                   secure={input.secure}
-                  error={error.value}
+                  error={error}
                   onChangeText={onChangeValues}
                   handleSecure={handleSecure}
                 />
@@ -119,7 +115,7 @@ function LoginScreen(props) {
           </View>
           <View style={LoginStyle.footerBodyContainer}>
             <TouchableOpacity style={LoginStyle.btnLogin} onPress={handleLogin}>
-              <Text style={LoginStyle.txtLogin}>Acceder</Text>
+              <Text style={LoginStyle.txtLogin}>{i18n.t('Login.Login')}</Text>
             </TouchableOpacity>
           </View>
         </View>

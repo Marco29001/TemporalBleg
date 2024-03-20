@@ -2,7 +2,7 @@ import {createSlice} from '@reduxjs/toolkit';
 
 export const dialogEmptyState = {
   open: false,
-  type: 0,
+  type: '',
   title: '',
   subtitle: '',
   isAccept: false,
@@ -15,11 +15,8 @@ export const dialogSlice = createSlice({
   name: 'dialog',
   initialState: dialogEmptyState,
   reducers: {
-    createDialog: (state, action) => {
-      return action.payload;
-    },
-    modifyDialog: (state, action) => {
-      return {...state, ...action.payload};
+    createDialog: (state, {payload}) => {
+      return {...state, ...payload};
     },
     resetDialog: () => {
       return dialogEmptyState;
@@ -27,4 +24,5 @@ export const dialogSlice = createSlice({
   },
 });
 
+export const selectDialog = state => state.dialog;
 export const {createDialog, modifyDialog, resetDialog} = dialogSlice.actions;

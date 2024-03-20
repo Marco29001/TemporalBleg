@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
+import {i18n} from '../../../assets/locale/i18n';
 import {useGlobalContext} from '../../../context/GlobalContext';
 import {getVariables} from '../../../services/remote/VariableServices';
 import {getGatewayById} from '../../../services/remote/GatewayServices';
@@ -19,27 +19,24 @@ import LoadingModal from '../../../components/LoadingModal';
 import ListSensorsRealTime from './components/ListSensorsRealTime';
 import GraphicsModal from './components/GraphicModal';
 import BlegIcon from '../../../assets/icons/customIcons/BlegIcon';
-import ErrorManager from '../../../utils/ErrorManager';
 import {WARNING_DIALOG} from '../../../utils/Constants';
 
 function GatewayRealTimeScreen({navigation}) {
   const {gatewayRealTime} = useGlobalContext();
   const [sensorsDb, setSensorsDb] = useState([]);
   const [variables, setVariables] = useState([]);
-  const [sensorGraphic, setSensorGraphic] = useState(null);
-  const [graphicModal, setGraphicModal] = useState(false);
-  const {acceptDialog} = useDialog();
+  const {showDialog} = useDialog();
   const {
     statusConnect,
     rssiGateway,
     sensors,
     variableGraphic,
-    max,
-    min,
     connectionGateway,
     disconnectGateway,
-  } = useGatewayConnection(variables, sensorGraphic, sensorsDb);
-  const {loading, error, callEnpoint} = useApiRequest();
+    handleSensorVariable,
+    handleCloseVariableGraphic,
+  } = useGatewayConnection(variables, sensorsDb);
+  const {loading, error, callEndpoint} = useApiRequest();
 
   const handleReturn = () => {
     if (statusConnect == 2) {
@@ -59,28 +56,10 @@ function GatewayRealTimeScreen({navigation}) {
     }
   };
 
-  const handleSensorVariable = (macAddress, variableId) => {
-    setGraphicModal(true);
-    setSensorGraphic({macAddress, variableId});
-  };
-
-  const handleCloseGraphic = () => {
-    setGraphicModal(false);
-    setSensorGraphic(null);
-  };
-
-  const showDialog = async (config, action) => {
-    const isAccept = await acceptDialog(config);
-
-    if (isAccept) {
-      action();
-    }
-  };
-
   //-------------------------------------------------------------------------------------
 
   const refreshVariables = async () => {
-    const response = await callEnpoint(getVariables());
+    const response = await callEndpoint(getVariables());
     if (response) {
       setVariables(response);
       connectionGateway(gatewayRealTime);
@@ -88,7 +67,7 @@ function GatewayRealTimeScreen({navigation}) {
   };
 
   const refreshGateway = async () => {
-    const response = await callEnpoint(getGatewayById(gatewayRealTime.idDb));
+    const response = await callEndpoint(getGatewayById(gatewayRealTime.idDb));
     if (response) {
       setSensorsDb(response.sensors);
     }
@@ -96,14 +75,19 @@ function GatewayRealTimeScreen({navigation}) {
 
   //---------------------------------------------------------------------------------------
   useEffect(() => {
-    refreshGateway();
-    refreshVariables();
+    connectionGateway(gatewayRealTime);
+    //refreshGateway();
+    //refreshVariables();
   }, []);
 
   useEffect(() => {
-    if (error.value) {
-      WARNING_DIALOG.subtitle =
-        error.e?.response?.data?.message ?? ErrorManager(error.status);
+    if (variableGraphic) {
+    }
+  }, [variableGraphic]);
+
+  useEffect(() => {
+    if (error) {
+      WARNING_DIALOG.subtitle = error.message;
       showDialog(WARNING_DIALOG, () => null);
     }
   }, [error]);
@@ -112,7 +96,7 @@ function GatewayRealTimeScreen({navigation}) {
     <>
       <LoadingModal visible={loading} />
 
-      <StatusBarComp backgroundColor="#003180" barStyle={'ligth-content'} />
+      <StatusBarComp backgroundColor="#003180" barStyle={'light-content'} />
 
       <View style={Styles.mainContent}>
         <View style={Styles.headerContent}>
@@ -121,37 +105,37 @@ function GatewayRealTimeScreen({navigation}) {
               <TouchableOpacity style={Styles.btnBack} onPress={handleReturn}>
                 <BlegIcon name={'icon_return'} color={'#FFFFFF'} size={25} />
               </TouchableOpacity>
+              <Text style={Styles.txtNameGateway}>{gatewayRealTime.name}</Text>
             </View>
             <View style={Styles.rigthTopHeader}>
               <View style={Styles.switchContainer(statusConnect)}>
                 <TouchableOpacity
                   style={Styles.btnSwitch(statusConnect)}
-                  onPress={handleSwitch}></TouchableOpacity>
+                  onPress={handleSwitch}
+                />
               </View>
             </View>
           </View>
-          <View style={Styles.bottomHeader}>
-            <Text style={Styles.txtNameGateway}>{gatewayRealTime.name}</Text>
-          </View>
+          <View style={Styles.bottomHeader} />
         </View>
         <View style={Styles.infoContent}>
           <View style={Styles.leftInfo}>
             <View style={Styles.leftField}>
-              <Text style={Styles.txtTitleField}>Direcion MAC:</Text>
-              <Text style={Styles.txtInfo}>
-                {Platform.OS == 'android'
-                  ? gatewayRealTime.id
-                  : gatewayRealTime.manufacturerData}
+              <Text style={Styles.txtTitleField}>
+                {i18n.t('GatewayRealtime.MacAddress')}:
               </Text>
+              <Text style={Styles.txtInfo}>{gatewayRealTime.id}</Text>
             </View>
             <View style={Styles.leftField}>
-              <Text style={Styles.txtTitleField}>Estatus: </Text>
+              <Text style={Styles.txtTitleField}>
+                {i18n.t('GatewayRealtime.Status')}:
+              </Text>
               <Text style={Styles.txtConected(statusConnect)}>
                 {statusConnect == 0
-                  ? 'Conectando'
+                  ? i18n.t('GatewayRealtime.Connecting')
                   : statusConnect == 2
-                  ? 'Conectado'
-                  : 'Desconectado'}
+                  ? i18n.t('GatewayRealtime.Connected')
+                  : i18n.t('GatewayRealtime.Disconnected')}
               </Text>
               {statusConnect == 0 && (
                 <ActivityIndicator size="small" color="#17A0A3" />
@@ -169,11 +153,8 @@ function GatewayRealTimeScreen({navigation}) {
       </View>
       {/* modals */}
       <GraphicsModal
-        modalVisible={graphicModal}
         variable={variableGraphic}
-        max={max}
-        min={min}
-        handleClose={handleCloseGraphic}
+        handleClose={handleCloseVariableGraphic}
       />
     </>
   );
@@ -182,15 +163,15 @@ function GatewayRealTimeScreen({navigation}) {
 const Styles = StyleSheet.create({
   mainContent: {flex: 1, backgroundColor: '#F2F2F7'},
   headerContent: {
-    flex: 0.18,
+    flex: 0.15,
     backgroundColor: '#003180',
     paddingHorizontal: 15,
   },
   topHeader: {flex: 1, flexDirection: 'row'},
-  leftTopHeader: {flex: 1, justifyContent: 'center'},
+  leftTopHeader: {flex: 1, flexDirection: 'row', alignItems: 'center'},
   btnBack: {
     width: 50,
-    height: 50,
+    height: 70,
     alignItems: 'center',
     justifyContent: 'center',
   },

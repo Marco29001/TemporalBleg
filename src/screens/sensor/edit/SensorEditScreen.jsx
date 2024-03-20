@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import {i18n} from '../../../assets/locale/i18n';
 import {
   getSensorById,
   editSensor,
@@ -16,7 +17,6 @@ import LoadingModal from '../../../components/LoadingModal';
 import HeaderComp from '../../../components/HeaderComp';
 import {calculateZindex} from '../../../utils/Common';
 import Parameter from './componets/Parameter';
-import ErrorManager from '../../../utils/ErrorManager';
 import {OK_DIALOG, WARNING_DIALOG} from '../../../utils/Constants';
 
 function SensorEditScreen(props) {
@@ -25,8 +25,8 @@ function SensorEditScreen(props) {
   const [reference, setReference] = useState('');
   const [sensor, setSensor] = useState(null);
   const [listConfig, setListConfig] = useState([]);
-  const {acceptDialog} = useDialog();
-  const {loading, error, callEnpoint} = useApiRequest();
+  const {showDialog} = useDialog();
+  const {loading, error, callEndpoint} = useApiRequest();
 
   const handleReturn = () => {
     props.navigation.replace('GatewayDetailScreen');
@@ -34,25 +34,19 @@ function SensorEditScreen(props) {
 
   const handleSave = async () => {
     const body = {sensorId: sensorId, comment: reference, config: listConfig};
-    const response = await callEnpoint(editSensor(body));
+    const response = await callEndpoint(editSensor(body));
     if (response) {
-      OK_DIALOG.subtitle = response.message;
-      showDialog(OK_DIALOG, () => {
+      let configDialog = Object.assign({}, OK_DIALOG);
+      configDialog.subtitle = response.message;
+
+      showDialog(configDialog, () => {
         props.navigation.replace('GatewayDetailScreen');
       });
     }
   };
 
-  const showDialog = async (config, action) => {
-    const isAccept = await acceptDialog(config);
-
-    if (isAccept) {
-      action();
-    }
-  };
-
   const refreshSensorInfo = async () => {
-    const response = await callEnpoint(getSensorById(sensorId));
+    const response = await callEndpoint(getSensorById(sensorId));
     if (response) {
       setSensor(response);
       setReference(response.comment);
@@ -64,10 +58,11 @@ function SensorEditScreen(props) {
   }, []);
 
   useEffect(() => {
-    if (error.value) {
-      WARNING_DIALOG.subtitle =
-        error.e?.response.data?.message ?? ErrorManager(error.status);
-      showDialog(WARNING_DIALOG, () => null);
+    if (error) {
+      let configDialog = Object.assign({}, WARNING_DIALOG);
+      configDialog.subtitle = error.message;
+
+      showDialog(configDialog);
     }
   }, [error]);
 
@@ -75,13 +70,15 @@ function SensorEditScreen(props) {
     <>
       <LoadingModal visible={loading} />
 
-      <View style={Styles.mainContent}>
+      <View style={styles.mainContent}>
         <HeaderComp title={'Editar sensor'} handleReturn={handleReturn} />
-        <View style={Styles.formContent}>
+        <View style={styles.formContent}>
           {/*Serial Number*/}
-          <Text style={Styles.txtTitleField}>No. Serie sensor</Text>
+          <Text style={styles.txtTitleField}>
+            {i18n.t('SensorEdit.SerialNumber')}
+          </Text>
           <TextInput
-            style={Styles.txtInputField}
+            style={styles.txtInputField}
             placeholder={sensor?.serialNumber}
             placeholderTextColor={'#5F6F7E'}
             keyboardType={'default'}
@@ -89,14 +86,18 @@ function SensorEditScreen(props) {
             onChangeText={setSerialNumber}
           />
           {/*Type sensor*/}
-          <Text style={Styles.txtTitleField}>Tipo de sensor</Text>
-          <Text style={Styles.txtField}>
+          <Text style={styles.txtTitleField}>
+            {i18n.t('SensorEdit.TypeSensor')}
+          </Text>
+          <Text style={styles.txtField}>
             {sensor?.sensorType?.sensorTypeName}
           </Text>
           {/*Reference*/}
-          <Text style={Styles.txtTitleField}>Referencia</Text>
+          <Text style={styles.txtTitleField}>
+            {i18n.t('SensorEdit.Reference')}
+          </Text>
           <TextInput
-            style={Styles.txtInputField}
+            style={styles.txtInputField}
             placeholder={'Ingrese referencia'}
             placeholderTextColor={'#5F6F7E'}
             keyboardType={'default'}
@@ -105,9 +106,9 @@ function SensorEditScreen(props) {
           />
           {sensor?.config?.length ? (
             <>
-              <View style={Styles.lineSeparator} />
-              <Text style={Styles.txtTitleParameters}>
-                Configurar parámetros
+              <View style={styles.lineSeparator} />
+              <Text style={styles.txtTitleParameters}>
+                {i18n.t('SensorEdit.Parameters')}
               </Text>
               {sensor.variables.map((variable, index) => {
                 return (
@@ -125,9 +126,9 @@ function SensorEditScreen(props) {
             </>
           ) : null}
           {/*Button*/}
-          <View style={Styles.buttonFormContent}>
-            <TouchableOpacity style={Styles.btnForm} onPress={handleSave}>
-              <Text style={Styles.txtButtonForm}>Guardar cambios</Text>
+          <View style={styles.buttonFormContent}>
+            <TouchableOpacity style={styles.btnForm} onPress={handleSave}>
+              <Text style={styles.txtButtonForm}>Guardar cambios</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -136,7 +137,7 @@ function SensorEditScreen(props) {
   );
 }
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
   mainContent: {flex: 1, backgroundColor: '#F2F2F7'},
   formContent: {flex: 1, padding: 25},
   txtTitleField: {

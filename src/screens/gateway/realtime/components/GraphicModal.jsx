@@ -1,72 +1,119 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef} from 'react';
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 import {
   View,
   Modal,
+  Text,
   TouchableOpacity,
   StyleSheet,
   Dimensions,
   Platform,
 } from 'react-native';
-import {WebView} from 'react-native-webview';
+import WebView from 'react-native-webview';
 import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon';
+import moment from 'moment';
+import {DetailList} from './DetailList';
 
-function GraphicsModal(props) {
-  const {modalVisible, variable, max, min, handleClose} = props;
-  const [showReturnButton, setShowReturnButton] = useState(true);
+const Tab = createMaterialTopTabNavigator();
+
+function GraphicsModal({variable, handleClose}) {
   const webRef = useRef(null);
-
   const sourceUri =
     Platform.OS === 'android'
       ? 'file:///android_asset/html/index.html'
       : 'Web.bundle/site/index.html';
 
-  const scriptSetValue = (variableName, variableValue) => {
-    return `
-      document.getElementById("variableName").innerHTML = "${variableName}";
-      document.getElementById("variableValue").innerHTML = "${variableValue}";
-      document.getElementById("max").innerHTML = "${max}";
-      document.getElementById("min").innerHTML = "${min}";
-    `;
+  const filterHistory = history => {
+    const currentDate = moment(
+      history[history.length - 1][0],
+      'YYYY-MM-DD HH:mm:ss',
+    );
+
+    const fiveMinutesAgo = currentDate.clone().subtract(1, 'minutes');
+
+    return history.filter(entry =>
+      moment(entry[0], 'YYYY-MM-DD HH:mm:ss').isSameOrAfter(fiveMinutesAgo),
+    );
   };
 
   useEffect(() => {
-    if (variable && modalVisible) {
-      webRef.current.injectJavaScript(
-        scriptSetValue(variable?.name, variable?.value + ' ' + variable?.unit),
-      );
-      webRef.current.postMessage(`${variable.value}`);
+    if (variable && webRef.current) {
+      let history = filterHistory(variable.history);
+      webRef.current.postMessage(JSON.stringify(history));
     }
-  }, [variable]);
+  }, [variable, webRef.current]);
 
   return (
     <>
-      <Modal animationType="slide" transparent={true} visible={modalVisible}>
-        <View style={Styles.centerModalContainer}>
-          <View style={Styles.graphicContent}>
-            <View style={Styles.headerContent} />
-            {showReturnButton && (
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={variable ? true : false}>
+        <View style={Styles.mainContainer}>
+          <View style={Styles.headerContent}>
+            <View style={Styles.returnContainer}>
               <TouchableOpacity
                 style={Styles.btnCloseModal}
                 onPress={handleClose}>
                 <BlegIcon name={'icon_return'} color={'#FFFFFF'} size={25} />
               </TouchableOpacity>
-            )}
-            <WebView
-              ref={r => (webRef.current = r)}
-              originWhitelist={['*']}
-              javaScriptEnabled={true}
-              setBuiltInZoomControls={false}
-              bounces={false}
-              textInteractionEnabled={false}
-              source={{uri: sourceUri}}
-              onMessage={event => {
-                if (event.nativeEvent.data == 'History') {
-                  setShowReturnButton(!showReturnButton);
-                } else {
-                  console.log(event.nativeEvent.data);
-                }
-              }}
-            />
+              <View style={Styles.titleContainer}>
+                <Text style={Styles.txtTitle}>{variable?.name}</Text>
+              </View>
+            </View>
+            <View style={Styles.subtitleContainer}>
+              <Text style={Styles.txtSubtitle}>
+                {variable?.value + ' ' + variable?.unit}
+              </Text>
+            </View>
+          </View>
+          <View style={Styles.graphicContent}>
+            <Tab.Navigator
+              screenOptions={{
+                swipeEnabled: false,
+                tabBarPressColor: '#46B7AE',
+                tabBarInactiveTintColor: '#666666',
+                tabBarActiveTintColor: '#46B7AE',
+                tabBarLabelStyle: {fontSize: 14},
+                tabBarStyle: {
+                  backgroundColor: 'rgba(221, 221, 221, 1)',
+                  height: 40,
+                },
+              }}>
+              <Tab.Screen
+                name="Graphic"
+                options={{
+                  tabBarLabel: 'Gráfica',
+                }}>
+                {() => (
+                  <WebView
+                    style={Styles.mainContainer}
+                    ref={r => (webRef.current = r)}
+                    originWhitelist={['*']}
+                    javaScriptEnabled={true}
+                    setBuiltInZoomControls={false}
+                    bounces={false}
+                    textInteractionEnabled={false}
+                    onMessage={event => {
+                      //console.log(event.nativeEvent.data);
+                    }}
+                    source={{uri: sourceUri}}
+                  />
+                )}
+              </Tab.Screen>
+              <Tab.Screen
+                name="DetailSensor"
+                options={{
+                  tabBarLabel: 'Detalle',
+                }}>
+                {() => (
+                  <DetailList
+                    history={variable?.history}
+                    unit={variable?.unit}
+                  />
+                )}
+              </Tab.Screen>
+            </Tab.Navigator>
           </View>
         </View>
       </Modal>
@@ -76,32 +123,45 @@ function GraphicsModal(props) {
 
 const {width, height} = Dimensions.get('window');
 const Styles = StyleSheet.create({
-  headerContent: {
-    height: 50,
-    backgroundColor: '#003180',
-  },
-  centerModalContainer: {
-    width: width,
-    height: height,
+  mainContainer: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  closeModal: {
-    flex: 0.3,
+  headerContent: {
+    flex: 0.15,
     backgroundColor: '#003180',
-    paddingHorizontal: 15,
-    justifyContent: 'center',
   },
+  returnContainer: {flex: 1, flexDirection: 'row'},
   btnCloseModal: {
     width: 50,
     height: 50,
-    position: 'absolute',
-    top: 60,
-    left: 10,
-    zIndex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  graphicContent: {flex: 2},
+
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txtTitle: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  subtitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txtSubtitle: {
+    fontSize: 25,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+
+  textVariable: {fontSize: 18, fontWeight: '700', color: '#FFFFFF'},
+  graphicContent: {flex: 1},
 });
 
 export default GraphicsModal;

@@ -1,17 +1,11 @@
 import React from 'react';
-import {
-  View,
-  FlatList,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-} from 'react-native';
+import {View, FlatList, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import {i18n} from '../../../../assets/locale/i18n';
 import SignalComp from '../../../../components/SignalComp';
 
 function ListGatewaysFind({gateways, handleGatewaySelect}) {
   return (
-    <View style={Styles.mainContainer}>
+    <View style={styles.mainContainer}>
       <FlatList
         showsVerticalScrollIndicator={false}
         data={gateways}
@@ -25,7 +19,7 @@ function ListGatewaysFind({gateways, handleGatewaySelect}) {
               ? firtsItem
               : itemNum == gateways.length
               ? latestItem
-              : Styles.item;
+              : styles.item;
 
           return (
             <>
@@ -33,33 +27,34 @@ function ListGatewaysFind({gateways, handleGatewaySelect}) {
                 key={index}
                 style={itemStyle}
                 onPress={() => handleGatewaySelect(item)}>
-                <View style={Styles.mainItemContainer}>
-                  <View style={Styles.iconGatewayContainer}>
+                <View style={styles.mainItemContainer}>
+                  <View style={styles.iconGatewayContainer}>
                     <SignalComp signalRssi={signalRssi} size={20} />
                   </View>
-                  <View style={Styles.infoGatewayContainer}>
-                    <Text style={Styles.txtTitleGateway}>
-                      {item.name ? item.name : item.localName}
+                  <View style={styles.infoGatewayContainer}>
+                    <Text style={styles.txtTitleGateway}>
+                      {item.name ? item?.name : item?.localName}
                     </Text>
-                    <Text style={Styles.txtSubtitleGateway}>
-                      {Platform.OS == 'android'
-                        ? item.id
-                        : item.manufacturerData}
+                    <Text style={styles.txtSubtitleGateway}>{item?.id}</Text>
+                    <Text style={styles.txtSubtitleGateway}>
+                      {i18n.t('GatewayFind.Unit')}:{item?.unit?.name ?? '-'}
                     </Text>
-                    <Text style={Styles.txtSubtitleGateway}>
-                      {'Unidad: ' + item.unit.name}
-                    </Text>
-                    <Text style={Styles.txtSubtitleGateway}>
-                      {'No.Serie Go: ' + item.unit.serialNumber}
+                    <Text style={styles.txtSubtitleGateway}>
+                      {i18n.t('GatewayFind.NoSerieGo')}:
+                      {item?.unit?.serialNumber ?? '-'}
                     </Text>
                   </View>
-                  <View style={Styles.countSensorsContainer}>
-                    <Text style={Styles.txtSensors}>{item.sensors}</Text>
-                    <Text style={Styles.txtTitleSensors}>Sensores</Text>
+                  <View style={styles.countSensorsContainer}>
+                    <Text style={styles.txtSensors}>
+                      {item?.sensors ?? '-'}
+                    </Text>
+                    <Text style={styles.txtTitleSensors}>
+                      {i18n.t('GatewayFind.Sensors')}
+                    </Text>
                   </View>
                 </View>
                 {itemNum != gateways.length && (
-                  <View style={Styles.divisorLine} />
+                  <View style={styles.divisorLine} />
                 )}
               </TouchableOpacity>
             </>
@@ -70,7 +65,7 @@ function ListGatewaysFind({gateways, handleGatewaySelect}) {
   );
 }
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
   mainContainer: {flex: 1},
   item: {height: 110, backgroundColor: '#FFFFFF', padding: 15},
   firtsItem: {borderTopStartRadius: 16, borderTopEndRadius: 16},
@@ -99,12 +94,12 @@ const Styles = StyleSheet.create({
   divisorLine: {height: 3, backgroundColor: '#D8DFE7', marginTop: 10},
 });
 
-const firtsItem = StyleSheet.compose(Styles.item, Styles.firtsItem);
-const latestItem = StyleSheet.compose(Styles.item, Styles.latestItem);
+const firtsItem = StyleSheet.compose(styles.item, styles.firtsItem);
+const latestItem = StyleSheet.compose(styles.item, styles.latestItem);
 const oneItem = StyleSheet.flatten([
-  Styles.item,
-  Styles.firtsItem,
-  Styles.latestItem,
+  styles.item,
+  styles.firtsItem,
+  styles.latestItem,
 ]);
 
 export default ListGatewaysFind;

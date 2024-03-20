@@ -1,138 +1,122 @@
+$(document).ready(function () {
+  requestData();
+});
+
+let chart = null;
 let data = [];
-let history = [];
 let seriesValue = [
   {
-    type: 'spline',
-    name: document.getElementById('variableName').innerHTML,
+    type: 'line',
+    name: 'Temperatura',
     data: data,
     color: '#003180',
   },
 ];
-let chart = new Highcharts.Chart({
-  chart: {
-    renderTo: 'chart',
-    defaultSeriesType: 'spline',
-    marginRight: 10,
-    events: {
-      load: requestData,
-    },
-  },
-  title: {
-    text: '',
-  },
-  legend: {
-    enabled: false,
-  },
-  credits: {
-    enabled: false,
-  },
-  exporting: {
-    enabled: false,
-  },
-  title: {
-    text: '',
-  },
-  xAxis: {
-    tickWidth: 0,
-    lineWidth: 0,
-    labels: {
-      enabled: false,
-    },
-    max: 20,
-    scrollbar: {
-      enabled: true,
-    },
-  },
-  yAxis: {
-    title: {
-      text: '',
-    },
-    gridLineColor: '#2E3F59',
-    gridLineWidth: 1,
-    lineWidth: 0,
-    min: 0,
-    max: parseFloat(document.getElementById('max').innerHTML),
-  },
-  plotOptions: {
-    series: {
-      animation: false,
-      getExtremesFromAll: true,
-      borderRadius: 18,
-      pointWidth: 100,
-      borderWidth: 0,
-      marker: {
-        radius: 5,
-      },
-    },
-  },
-  series: seriesValue,
-});
 
 function requestData() {
   document.addEventListener('message', message => {
     try {
-      let newPoint = parseFloat(message.data);
+      let tempData = JSON.parse(message.data);
 
-      // add the point
-      if (data.length >= 21) {
-        data.shift(); //delete last point
-        seriesValue[0].data = data;
-        chart.update({
-          series: seriesValue,
+      tempData.map(obj => {
+        data.push(obj);
+      });
+
+      //get min and max value
+      let values = data.map(item => item[1]);
+      document.getElementById('min').innerHTML = Math.min(...values).toString();
+      document.getElementById('max').innerHTML = Math.max(...values).toString();
+
+      seriesValue[0].data = values;
+
+      if (chart) {
+        values.map(item => {
+          seriesValue[0].data = [...seriesValue[0].data, item];
+          chart.update({
+            series: seriesValue,
+          });
+
+          chart.yAxis[0].update({
+            min: 0,
+            max: data[data.length - 1][1],
+          });
         });
+      } else {
+        createChart();
       }
 
-      data = [...data, newPoint];
-
-      //Update series
-      seriesValue[0].data = data;
-      chart.update({
-        series: seriesValue,
-      });
-
-      //Update max value
-      chart.yAxis[0].update({
-        max: parseFloat(document.getElementById('max').innerHTML),
-      });
-
-      //insert history
-      insertHistory(newPoint);
+      window.ReactNativeWebView.postMessage(
+        'updated data ' + JSON.stringify(data),
+      );
     } catch (error) {
-      window.alert('Error al recibir la informacion', error);
+      window.ReactNativeWebView.postMessage('error ' + error);
     }
   });
 }
 
-function insertHistory(value) {
-  let template = '';
-  let date = moment().format('DD/MM/YYYY, hh:mm:ss');
-
-  history = [...history, {date, value}];
-
-  history.map(obj => {
-    template += `
-        <article class="footer-card">
-          <div class="footer-card-date-hour">
-            <p class="footer-card-date-text">Fecha y hora</p>
-            <p class="footer-card-date">${obj.date}</p>
-          </div>
-          <h1 class="footer-card-temp">${obj.value}</h1>
-        </article>
-        `;
-  });
-
-  $('.footer-cards-wrap').html(template);
-}
-
-$('.footer-title').click(function () {
-  window.ReactNativeWebView.postMessage('History');
-  if ($('footer').css('top') > '200px') {
-    $('footer').removeClass('footer');
-    $('footer').addClass('footerSpan');
-  } else {
-    $('footer').removeClass('footerSpan');
-    $('footer').addClass('footer');
+function createChart() {
+  try {
+    chart = new Highcharts.Chart({
+      chart: {
+        renderTo: 'chart',
+        marginTop: 15,
+        events: {
+          load: requestData,
+        },
+      },
+      title: {
+        text: '',
+      },
+      legend: {
+        enabled: false,
+      },
+      credits: {
+        enabled: false,
+      },
+      exporting: {
+        enabled: false,
+      },
+      title: {
+        text: '',
+      },
+      xAxis: {
+        type: 'datetime',
+        tickWidth: 0,
+        lineWidth: 0,
+        labels: {
+          enabled: false,
+        },
+        //max: 20,
+        scrollbar: {
+          enabled: true,
+        },
+      },
+      yAxis: {
+        title: {
+          text: '',
+        },
+        gridLineColor: '#2E3F59',
+        gridLineWidth: 1,
+        lineWidth: 0,
+        min: 0,
+        max: 30,
+      },
+      plotOptions: {
+        series: {
+          animation: false,
+          getExtremesFromAll: true,
+          borderRadius: 18,
+          pointWidth: 100,
+          borderWidth: 0,
+          marker: {
+            radius: 5,
+          },
+        },
+      },
+      series: seriesValue,
+    });
+  } catch (error) {
+    window.alert('Error en la gráfica', error);
   }
-});
-
+}
 true;

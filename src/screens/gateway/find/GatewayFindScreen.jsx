@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import {i18n} from '../../../assets/locale/i18n';
 import useFindGateways from './hooks/useFindGateways';
 import ListGatewaysFind from './components/ListGatewaysFind';
 import HeaderTab from '../../../components/HeaderTab';
@@ -29,44 +30,46 @@ function GatewaysFindScreen(props) {
     }
   };
 
-  const handleGatewaySelect = async gateway => {
+  const handleGatewaySelect = gateway => {
     setGatewayRealTime(gateway);
     props.navigation.replace('GatewayRealTimeScreen');
   };
 
   return (
     <>
-      <View style={Styles.mainContainer}>
+      <View style={styles.mainContainer}>
         <HeaderTab
           {...props}
-          title={'Escanear Bleg'}
+          title={i18n.t('GatewayFind.TitleHeader')}
           screen={'GatewaysFindScreen'}
         />
 
-        <View style={Styles.bluetoothContainer}>
-          <View style={Styles.descriptionContainer}>
-            <Text style={Styles.txtDescription}>
-              Selecciona un BLEG para ver su status e infomación interna
+        <View style={styles.bluetoothContainer}>
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.txtDescription}>
+              {i18n.t('GatewayFind.Message')}
             </Text>
-            <Text style={Styles.txtStatusBluetooth}>
+            <Text style={styles.txtStatusBluetooth}>
               {statusBluetooth == 'PoweredOn'
-                ? 'Bluetooth  activo'
-                : 'Bluetooth inactivo'}
+                ? i18n.t('GatewayFind.ActiveBluetooth')
+                : i18n.t('GatewayFind.InactiveBluetooth')}
             </Text>
           </View>
           <TouchableOpacity
-            style={Styles.btnBluetooth}
+            style={styles.btnBluetooth}
             onPress={handleFindGateways}>
             <BlegIcon name="icon_bluetooth" color={'#FFFFFF'} size={25} />
-            <Text style={Styles.txtButton}>
-              {!scanning ? 'Iniciar busqueda' : 'Finalizar busqueda'}
+            <Text style={styles.txtButton}>
+              {!scanning
+                ? i18n.t('GatewayFind.StartSearch')
+                : i18n.t('GatewayFind.EndSearch')}
             </Text>
           </TouchableOpacity>
           {scanning && (
-            <View style={Styles.searchDevicesContainer}>
+            <View style={styles.searchDevicesContainer}>
               <ActivityIndicator size="large" color="#003180" />
-              <Text style={Styles.txtSearchDevices}>
-                Buscando BLEG cercanos
+              <Text style={styles.txtSearchDevices}>
+                {i18n.t('GatewayFind.NearBleg')}
               </Text>
             </View>
           )}
@@ -75,13 +78,13 @@ function GatewaysFindScreen(props) {
             handleGatewaySelect={handleGatewaySelect}
           />
         </View>
-        <View style={Styles.footerContainer} />
+        <View style={styles.footerContainer} />
       </View>
     </>
   );
 }
 
-const Styles = StyleSheet.create({
+const styles = StyleSheet.create({
   mainContainer: {flex: 1, backgroundColor: '#F2F2F7'},
   bluetoothContainer: {flex: 1, padding: 15},
   descriptionContainer: {alignItems: 'center'},

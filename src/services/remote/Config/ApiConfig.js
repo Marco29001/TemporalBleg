@@ -2,10 +2,9 @@ import axios from 'axios';
 import LocalStorage from '../../local/LocalStorage';
 
 const Api = axios.create({
-  baseURL: 'https://cloud2.didcom.mx/Services/BluetoothSensorManager',
-  headers: {
-    'Content-type': 'application/json',
-  },
+  //baseURL: 'https://cloud2.didcom.mx/Services/BluetoothSensorManager',
+  baseURL: 'http://192.168.12.230:45455/',
+  headers: {'Content-type': 'application/json'},
 });
 
 //INTERCEPTORS
