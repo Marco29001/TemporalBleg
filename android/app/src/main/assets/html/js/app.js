@@ -1,122 +1,116 @@
-$(document).ready(function () {
-  requestData();
-});
+// On chart load, start an interval that adds points to the chart and animate
+// the pulsating marker.
+const onChartLoad = function () {
+  const chart = this,
+    series = chart.series[0]
 
-let chart = null;
-let data = [];
-let seriesValue = [
-  {
-    type: 'line',
-    name: 'Temperatura',
-    data: data,
-    color: '#003180',
-  },
-];
+  setInterval(function () {
+    const x = new Date().getTime(), // current time
+      y = Math.random()
 
-function requestData() {
-  document.addEventListener('message', message => {
-    try {
-      let tempData = JSON.parse(message.data);
-
-      tempData.map(obj => {
-        data.push(obj);
-      });
-
-      //get min and max value
-      let values = data.map(item => item[1]);
-      document.getElementById('min').innerHTML = Math.min(...values).toString();
-      document.getElementById('max').innerHTML = Math.max(...values).toString();
-
-      seriesValue[0].data = values;
-
-      if (chart) {
-        values.map(item => {
-          seriesValue[0].data = [...seriesValue[0].data, item];
-          chart.update({
-            series: seriesValue,
-          });
-
-          chart.yAxis[0].update({
-            min: 0,
-            max: data[data.length - 1][1],
-          });
-        });
-      } else {
-        createChart();
-      }
-
-      window.ReactNativeWebView.postMessage(
-        'updated data ' + JSON.stringify(data),
-      );
-    } catch (error) {
-      window.ReactNativeWebView.postMessage('error ' + error);
-    }
-  });
+    series.addPoint([x, y], true, true)
+  }, 1000)
 }
 
-function createChart() {
-  try {
-    chart = new Highcharts.Chart({
-      chart: {
-        renderTo: 'chart',
-        marginTop: 15,
-        events: {
-          load: requestData,
-        },
-      },
-      title: {
-        text: '',
-      },
-      legend: {
-        enabled: false,
-      },
-      credits: {
-        enabled: false,
-      },
-      exporting: {
-        enabled: false,
-      },
-      title: {
-        text: '',
-      },
-      xAxis: {
-        type: 'datetime',
-        tickWidth: 0,
-        lineWidth: 0,
-        labels: {
-          enabled: false,
-        },
-        //max: 20,
-        scrollbar: {
-          enabled: true,
-        },
-      },
-      yAxis: {
-        title: {
-          text: '',
-        },
-        gridLineColor: '#2E3F59',
-        gridLineWidth: 1,
-        lineWidth: 0,
-        min: 0,
-        max: 30,
-      },
-      plotOptions: {
-        series: {
-          animation: false,
-          getExtremesFromAll: true,
-          borderRadius: 18,
-          pointWidth: 100,
-          borderWidth: 0,
-          marker: {
-            radius: 5,
-          },
-        },
-      },
-      series: seriesValue,
-    });
-  } catch (error) {
-    window.alert('Error en la gráfica', error);
+// Create the initial data
+const data = (function () {
+  const data = []
+  const time = new Date().getTime()
+
+  for (let i = -19; i <= 0; i += 1) {
+    data.push({
+      x: time + i * 1000,
+      y: Math.random(),
+    })
   }
-}
-true;
+  return data
+})()
+
+// Plugin to add a pulsating marker on add point
+Highcharts.addEvent(Highcharts.Series, 'addPoint', e => {
+  const point = e.point,
+    series = e.target
+
+  if (!series.pulse) {
+    series.pulse = series.chart.renderer.circle().add(series.markerGroup)
+  }
+
+  setTimeout(() => {
+    series.pulse
+      .attr({
+        x: series.xAxis.toPixels(point.x, true),
+        y: series.yAxis.toPixels(point.y, true),
+        r: series.options.marker.radius,
+        opacity: 1,
+        fill: series.color,
+      })
+      .animate(
+        {
+          r: 20,
+          opacity: 0,
+        },
+        {
+          duration: 1000,
+        },
+      )
+  }, 1)
+})
+
+Highcharts.chart('chart', {
+  chart: {
+    type: 'spline',
+    events: {
+      load: onChartLoad,
+    },
+  },
+
+  time: {
+    useUTC: false,
+  },
+
+  title: {
+    text: 'Live random data',
+  },
+
+  xAxis: {
+    type: 'datetime',
+    tickPixelInterval: 150,
+    maxPadding: 0.1,
+  },
+
+  yAxis: {
+    title: {
+      text: 'Value',
+    },
+    plotLines: [
+      {
+        value: 0,
+        width: 1,
+        color: '#808080',
+      },
+    ],
+  },
+  tooltip: {
+    headerFormat: '<b>{series.name}</b><br/>',
+    pointFormat: '{point.x:%Y-%m-%d %H:%M:%S}<br/>{point.y:.2f}',
+  },
+
+  legend: {
+    enabled: false,
+  },
+
+  exporting: {
+    enabled: false,
+  },
+
+  series: [
+    {
+      name: 'Random data',
+      lineWidth: 2,
+      color: Highcharts.getOptions().colors[2],
+      data,
+    },
+  ],
+})
+
+true

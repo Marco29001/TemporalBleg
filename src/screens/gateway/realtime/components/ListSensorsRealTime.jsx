@@ -1,17 +1,23 @@
-import React from 'react';
-import {View, FlatList, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {i18n} from '../../../../assets/locale/i18n';
-import Battery from './Battery';
-import SignalComp from '../../../../components/SignalComp';
-import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon';
+import React, { useEffect } from 'react'
+import {
+  View,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native'
+import { i18n } from '../../../../assets/locale/i18n'
+import Battery from './Battery'
+import SignalComp from '../../../../components/SignalComp'
+import BlegIcon from '../../../../assets/icons/customIcons/BlegIcon'
 
-function ListSensorsRealTime({data, handleSensorVariable}) {
+function ListSensorsRealTime({ data, handleSensorVariable }) {
   return (
     <FlatList
       style={styles.list}
       showsVerticalScrollIndicator={false}
       data={data}
-      renderItem={({item, index}) => {
+      renderItem={({ item, index }) => {
         return (
           <View key={index} style={styles.item}>
             <View style={styles.sensorInfoContent}>
@@ -40,7 +46,9 @@ function ListSensorsRealTime({data, handleSensorVariable}) {
                 <Text style={styles.txtGeneralItem}>{item.LA}</Text>
               </View>
             </View>
-            {item.variables.map((variable, index) => {
+            {item?.variables.map((variable, index) => {
+              const variableValue =
+                variable.history[variable.history.length - 1].y
               return (
                 <View key={index}>
                   {index != item.variables.length ? (
@@ -49,16 +57,18 @@ function ListSensorsRealTime({data, handleSensorVariable}) {
                   <TouchableOpacity
                     style={styles.infoTypeSensor}
                     onPress={handleSensorVariable(item.MC, variable.id)}>
-                    <Text style={styles.txtInfoType}>{variable.name}</Text>
                     <Text style={styles.txtInfoType}>
-                      {variable.value + ' ' + variable.unit}
+                      {variable?.name ?? ''}
+                    </Text>
+                    <Text style={styles.txtInfoType}>
+                      {variableValue + ' ' + variable?.unit ?? ''}
                     </Text>
                     <View style={styles.btnNext}>
                       <BlegIcon name="icon_next" color={'#17A0A3'} size={20} />
                     </View>
                   </TouchableOpacity>
                 </View>
-              );
+              )
             })}
             <View style={styles.lineSeparator} />
             <View style={styles.referenceContainer}>
@@ -68,35 +78,35 @@ function ListSensorsRealTime({data, handleSensorVariable}) {
               </Text>
             </View>
           </View>
-        );
+        )
       }}
     />
-  );
+  )
 }
 
 const styles = StyleSheet.create({
-  list: {flex: 1, paddingHorizontal: 15},
+  list: { flex: 1, paddingHorizontal: 15 },
   item: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 15,
     marginBottom: 15,
   },
-  txtGeneralItem: {fontSize: 16, color: '#97A4B0', marginLeft: 5},
-  sensorInfoContent: {flex: 1, flexDirection: 'row', marginBottom: 15},
-  sensorCount: {flex: 1},
-  txtSensorCount: {fontSize: 16, fontWeight: 'bold', color: '#17A0A3'},
-  macAddress: {flex: 1, alignItems: 'center'},
+  txtGeneralItem: { fontSize: 16, color: '#97A4B0', marginLeft: 5 },
+  sensorInfoContent: { flex: 1, flexDirection: 'row', marginBottom: 15 },
+  sensorCount: { flex: 1 },
+  txtSensorCount: { fontSize: 16, fontWeight: 'bold', color: '#17A0A3' },
+  macAddress: { flex: 1, alignItems: 'center' },
   infoStatusSensor: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBattery: {transform: [{rotate: '270deg'}]},
-  infoTypeSensor: {flex: 1, flexDirection: 'row', marginBottom: 15},
-  txtInfoType: {flex: 1, fontSize: 16, color: '#97A4B0'},
-  btnNext: {flex: 1, alignItems: 'flex-end'},
+  iconBattery: { transform: [{ rotate: '270deg' }] },
+  infoTypeSensor: { flex: 1, flexDirection: 'row', marginBottom: 15 },
+  txtInfoType: { flex: 1, fontSize: 16, color: '#97A4B0' },
+  btnNext: { flex: 1, alignItems: 'flex-end' },
   lineSeparator: {
     height: 3,
     backgroundColor: '#D8DFE7',
@@ -106,7 +116,7 @@ const styles = StyleSheet.create({
     height: 30,
     justifyContent: 'center',
   },
-  txtReference: {fontSize: 16, color: '#97A4B0'},
-});
+  txtReference: { fontSize: 16, color: '#97A4B0' },
+})
 
-export default ListSensorsRealTime;
+export default ListSensorsRealTime

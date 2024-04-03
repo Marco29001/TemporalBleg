@@ -1,153 +1,143 @@
-import {useEffect, useState, useRef} from 'react';
-import {BleManager} from 'react-native-ble-plx';
-import {useGlobalContext} from '../../../../context/GlobalContext';
+import { useEffect, useState, useRef, useReducer } from 'react'
+import { BleManager } from 'react-native-ble-plx'
+import { useGlobalContext } from '../../../../context/GlobalContext'
 import {
   SENSOR_MANAGER_SERVICE,
   SENSOR_CHARACTERISTIC,
-} from '../../../../utils/Constants';
+} from '../../../../utils/Constants'
 import {
   EmptyObjectValidate,
   convertBase64ToString,
   convertMacAddress,
-} from '../../../../utils/Common';
-import moment from 'moment';
+} from '../../../../utils/Common'
+import moment from 'moment'
 
-const manager = new BleManager();
+const manager = new BleManager()
 
 function useGatewayConnection(variables, sensorsDb) {
-  const {gatewayRealTime} = useGlobalContext();
-  const timer = useRef(null);
-  const sensors = useRef([]);
-  const [statusConnect, setStatusConnect] = useState(0); //status 0 connecting, 1 disconnected, 2 connected
-  const [sensorService, setSensorService] = useState(null);
-  const [characteristic, setCharacteristic] = useState(null);
+  const { gatewayRealTime } = useGlobalContext()
+  const timer = useRef(null)
+  const [statusConnect, setStatusConnect] = useState(0) //status 0 connecting, 1 disconnected, 2 connected
+  const [sensorService, setSensorService] = useState(null)
+  const [characteristic, setCharacteristic] = useState(null)
   const [rssiGateway, setRssiGateway] = useState(
     gatewayRealTime?.rssi * -1 ?? 0,
-  );
-  const [variableGraphic, setVariableGraphic] = useState(null);
+  )
+  const [variableGraphic, setVariableGraphic] = useState(null)
+
+  const [sensors, setSensors] = useState(new Map())
 
   const connectionGateway = async gateway => {
     try {
       // Validate connection to bleg
-      const validateConnection = await gateway.isConnected();
+      const validateConnection = await gateway.isConnected()
 
       if (!validateConnection) {
-        setStatusConnect(0);
+        setStatusConnect(0)
         // Connect to device
-        const connectedGateway = await gateway.connect();
-        console.log('is connected with device');
+        const connectedGateway = await gateway.connect()
+        console.log('Device is connected')
         // Discover all device services and characteristics
         const allServicesAndCharacteristics =
-          await connectedGateway.discoverAllServicesAndCharacteristics();
+          await connectedGateway.discoverAllServicesAndCharacteristics()
         //Discovered manager service
         const discoveredServices =
-          await allServicesAndCharacteristics.services();
+          await allServicesAndCharacteristics.services()
         //Find service
         const service = discoveredServices.find(
           item => item.uuid == SENSOR_MANAGER_SERVICE,
-        );
+        )
 
         if (service) {
           // Read characteristic
-          await getCharacteristic(service);
-          setSensorService(service);
-          setStatusConnect(2);
+          await getCharacteristic(service)
+          setSensorService(service)
+          setStatusConnect(2)
         }
       } else {
-        setStatusConnect(2);
+        setStatusConnect(2)
       }
     } catch (error) {
-      setStatusConnect(1);
-      console.log('ocurrió un error al conectar', error);
+      setStatusConnect(1)
+      console.log('ocurrió un error al conectar', error)
     }
-  };
+  }
 
   const disconnectGateway = async gateway => {
     try {
-      await manager.cancelDeviceConnection(gateway.id);
-      console.log('device is disconnected');
+      await manager.cancelDeviceConnection(gateway.id)
+      console.log('device is disconnected')
 
-      emptyVariables();
+      emptyVariables()
     } catch (error) {
-      console.log('No disconnecting device', error);
+      console.log('No disconnecting device', error)
     }
-  };
+  }
 
   const getCharacteristic = async service => {
     try {
       const characteristic = await service.readCharacteristic(
         SENSOR_CHARACTERISTIC,
-      );
-      let date = new Date();
-      //console.log(date, characteristic.value);
-      //console.log(convertBase64ToString(characteristic.value));
-      processSensorData(convertBase64ToString(characteristic.value));
+      )
+      processSensorData(convertBase64ToString(characteristic.value))
     } catch (error) {
-      console.log('ocurrió un error al obtener la característica', error);
+      console.log('ocurrió un error al obtener la característica', error)
     }
-  };
+  }
 
   const getRssiGateway = async () => {
     try {
-      const gateway = await gatewayRealTime.readRSSI();
-      setRssiGateway(gateway.rssi * -1);
+      const gateway = await gatewayRealTime.readRSSI()
+      setRssiGateway(gateway.rssi * -1)
     } catch (error) {
-      console.log('Error rssi', error);
-      emptyVariables();
+      console.log('Error rssi', error)
     }
-  };
+  }
 
   const processSensorData = data => {
     data.Sensores.map(sensor => {
-      const searchSensorIndex = sensors.current.findIndex(
-        item => item.MC == convertMacAddress(sensor.MC),
-      );
-
-      const dataVariable = getDataVariableSensor(
+      const propertiesSensor = Object.keys(sensor)
+      const sensorVariable = getDataVariableSensor(
         parseInt(sensor.ID),
         sensor.VL,
-      );
+      )
 
-      sensor.MC = convertMacAddress(sensor.MC);
-      sensor.NM = EmptyObjectValidate(sensor.NM) ? '' : sensor.NM;
-      sensor.BT = EmptyObjectValidate(sensor.BT) ? 0 : sensor.BT;
-      sensor.LA = EmptyObjectValidate(sensor.LA) ? 0 : sensor.LA;
-      sensor.SG = EmptyObjectValidate(sensor.SG) ? 100 : sensor.SG;
-      sensor.reference = '';
+      propertiesSensor.map(key => {
+        sensor[key] =
+          key == 'MC'
+            ? convertMacAddress(sensor[key])
+            : EmptyObjectValidate(sensor[key])
+      })
 
-      if (searchSensorIndex !== -1) {
-        const searchVariableIndex = sensors.current[
-          searchSensorIndex
-        ].variables.findIndex(item => item.id == sensor.ID);
+      setSensors(map => {
+        let s = map.get(sensor.MC)
+        if (s) {
+          const variableIndex = s.variables.findIndex(item => item.id == s.ID)
 
-        sensors.current[searchSensorIndex].NM = sensor.NM;
-        sensors.current[searchSensorIndex].BT = sensor.BT;
-        sensors.current[searchSensorIndex].LA = sensor.LA;
-        sensors.current[searchSensorIndex].SG = sensor.SG;
+          s.BT = sensor.BT
+          s.SG = sensor.SG
+          s.LA = sensor.LA
+          if (variableIndex !== -1) {
+            s.variables[variableIndex].history.push(sensorVariable.history[0])
+            s.variables[variableIndex].history = filterHistory(
+              s.variables[variableIndex].history,
+            )
+          } else {
+            s.variables.push(sensorVariable)
+          }
 
-        if (searchVariableIndex !== -1) {
-          sensors.current[searchSensorIndex].variables[
-            searchVariableIndex
-          ].date = dataVariable.date;
-          sensors.current[searchSensorIndex].variables[
-            searchVariableIndex
-          ].value = dataVariable.value;
-          sensors.current[searchSensorIndex].variables[
-            searchVariableIndex
-          ].history.push(dataVariable.history[0]);
+          return new Map(map.set(s.MC, s))
         } else {
-          sensors.current[searchSensorIndex].variables.push(dataVariable);
+          sensor.reference = ''
+          sensor.variables = [sensorVariable]
+          return new Map(map.set(sensor.MC, sensor))
         }
-      } else {
-        sensor.variables = [dataVariable];
-        sensors.current.push(sensor);
-      }
-    });
-  };
+      })
+    })
+  }
 
   const getDataVariableSensor = (idVariable, value) => {
-    let data = {};
-    let date = new Date();
+    let date = new Date()
 
     const LocalVariables = [
       {
@@ -270,71 +260,82 @@ function useGatewayConnection(variables, sensorsDb) {
         unit: '',
         unitType: 1,
       },
-    ];
+    ]
 
-    const variable = LocalVariables.find(item => item.id == idVariable);
+    const variable = LocalVariables.find(item => item.id == idVariable)
+    variable.id = idVariable
+    variable.history = [{ x: date, y: value }]
 
-    data = {
-      id: idVariable,
-      name: variable?.name ?? 'No variable',
-      unit: variable?.unit ?? '',
-      date,
-      value,
-      history: [[moment(date).format('YYYY-MM-DD HH:mm:ss'), value]],
-    };
+    return variable
+  }
 
-    return data;
-  };
+  const filterHistory = history => {
+    const currentDate = moment(
+      history[history.length - 1].x,
+      'YYYY-MM-DD HH:mm:ss',
+    )
+
+    const fiveMinutesAgo = currentDate.clone().subtract(5, 'minutes')
+
+    return history.filter(entry =>
+      moment(entry.x, 'YYYY-MM-DD HH:mm:ss').isSameOrAfter(fiveMinutesAgo),
+    )
+  }
 
   const handleSensorVariable = (macAddress, variableId) => () => {
-    sensors.current.map(sensor => {
-      if (sensor.MC == macAddress) {
-        sensor.variables.map(variable => {
-          if (variable.id == variableId) {
-            setVariableGraphic(variable);
-          }
-        });
+    const sensor = sensors.get(macAddress)
+    if (sensor) {
+      const variable = sensor.variables.find(item => item.id == variableId)
+      if (variable) {
+        setVariableGraphic(variable)
       }
-    });
-  };
+    }
+  }
 
   const handleCloseVariableGraphic = () => {
-    setVariableGraphic(null);
-  };
+    setVariableGraphic(null)
+  }
 
   const emptyVariables = () => {
-    setStatusConnect(1);
-    setCharacteristic(null);
-    setSensorService(null);
-    clearInterval(timer.current);
-  };
+    setStatusConnect(1)
+    setCharacteristic(null)
+    setSensorService(null)
+    clearInterval(timer.current)
+  }
 
   useEffect(() => {
     if (sensorService) {
       timer.current = setInterval(() => {
-        getCharacteristic(sensorService);
-        getRssiGateway();
-      }, 1000);
+        getCharacteristic(sensorService)
+        getRssiGateway()
+      }, 1000)
     }
 
     return () => {
       if (timer.current) {
-        clearInterval(timer.current);
+        clearInterval(timer.current)
       }
-    };
-  }, [sensorService]);
+    }
+  }, [sensorService])
+
+  useEffect(() => {
+    if (sensors.size !== 0) {
+      let actualSensors = Array.from(sensors.values())
+      //console.log(JSON.stringify(actualSensors[0]?.variables, null, 2))
+    }
+  }, [sensors])
 
   return {
     statusConnect,
     characteristic,
     rssiGateway,
-    sensors: sensors.current,
+    sensors: Array.from(sensors.values()),
     variableGraphic,
     connectionGateway,
     disconnectGateway,
     handleSensorVariable,
     handleCloseVariableGraphic,
-  };
+  }
 }
 
-export default useGatewayConnection;
+export default useGatewayConnection
