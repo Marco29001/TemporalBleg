@@ -1,6 +1,6 @@
-import {apiGet} from './Config/ApiGeneric';
+import { apiGet } from './Config/ApiGeneric'
 
 export function getDevices() {
-  const enpoint = '/api/device';
-  return apiGet(enpoint);
+  const endpoint = '/api/Device/GetDevices'
+  return apiGet(endpoint)
 }

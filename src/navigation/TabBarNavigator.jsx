@@ -1,50 +1,50 @@
-import React, {useEffect} from 'react';
-import {StyleSheet} from 'react-native';
-import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
-import {useGlobalContext} from '../context/GlobalContext';
-import GatewaysListScreen from '../screens/gateway/list/GatewaysListScreen';
-import GatewaysFindScreen from '../screens/gateway/find/GatewayFindScreen';
-import BlegIcon from '../assets/icons/customIcons/BlegIcon';
+import React, { useEffect } from 'react'
+import { StyleSheet } from 'react-native'
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs'
+import { useGlobalContext } from '../context/GlobalContext'
+import BlegsListScreen from '../screens/bleg/list/BlegsListScreen'
+import BlegsFindScreen from '../screens/bleg/find/BlegFindScreen'
+import BlegIcon from '../assets/icons/customIcons/BlegIcon'
 
-const Tab = createMaterialTopTabNavigator();
+const Tab = createMaterialTopTabNavigator()
 
 function TabBarNavigator(props) {
-  const {userSession} = useGlobalContext();
+  const { userSession } = useGlobalContext()
 
   useEffect(() => {
     if (userSession.token == null) {
-      props.navigation.replace('LoginScreen');
+      props.navigation.replace('LoginScreen')
     }
-  }, [userSession]);
+  }, [userSession])
 
   return (
     <>
       <Tab.Navigator screenOptions={styles.tabStyles}>
         <Tab.Screen
-          name="GatewaysListScreen"
-          component={GatewaysListScreen}
+          name="BlegsListScreen"
+          component={BlegsListScreen}
           options={{
             headerShown: false,
             tabBarLabel: '',
-            tabBarIcon: ({color}) => (
-              <BlegIcon name="icon_gateway" color={color} size={17} />
+            tabBarIcon: ({ color }) => (
+              <BlegIcon name="icon_Bleg" color={color} size={17} />
             ),
           }}
         />
         <Tab.Screen
-          name="GatewaysFindScreen"
-          component={GatewaysFindScreen}
+          name="BlegsFindScreen"
+          component={BlegsFindScreen}
           options={{
             headerShown: false,
             tabBarLabel: '',
-            tabBarIcon: ({color}) => (
+            tabBarIcon: ({ color }) => (
               <BlegIcon name="icon_bluetooth" color={color} size={20} />
             ),
           }}
         />
       </Tab.Navigator>
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     tabBarPressColor: '#46B7AE',
     tabBarInactiveTintColor: '#666666',
     tabBarActiveTintColor: '#46B7AE',
-    tabBarLabelStyle: {fontSize: 10},
+    tabBarLabelStyle: { fontSize: 10 },
     tabBarStyle: {
       backgroundColor: '#FFFFFF',
       height: 60,
@@ -62,6 +62,6 @@ const styles = StyleSheet.create({
       right: 0,
     },
   },
-});
+})
 
-export default TabBarNavigator;
+export default TabBarNavigator

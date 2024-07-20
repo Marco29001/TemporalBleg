@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import Toast from 'react-native-toast-message'
+import { PaperProvider } from 'react-native-paper'
 import { Provider } from 'react-redux'
 import Store from './src/redux/Store'
 import GlobalContext from './src/context/GlobalContext'
@@ -14,12 +15,14 @@ export default function App() {
     <>
       <Provider store={Store}>
         <GlobalContext>
-          <NavigationContainer>
-            <StackNavigator />
-            <Logout />
-            <AlertDialog />
-          </NavigationContainer>
-          <Toast config={didcomToastConfig} />
+          <PaperProvider>
+            <NavigationContainer>
+              <StackNavigator />
+              <Logout />
+              <AlertDialog />
+            </NavigationContainer>
+            <Toast config={didcomToastConfig} />
+          </PaperProvider>
         </GlobalContext>
       </Provider>
     </>

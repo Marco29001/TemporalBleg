@@ -1,21 +1,21 @@
-import React, {useEffect, useState} from 'react';
-import {View, Image, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import {i18n} from '../../assets/locale/i18n';
-import {getAuth} from '../../services/remote/AuthServices';
-import {useGlobalContext} from '../../context/GlobalContext';
-import useApiRequest from '../../hooks/useApiRequest';
-import LoadingModal from '../../components/LoadingModal';
-import CustomTextInput from '../../components/CustomTextInput';
-import {showToastMessage} from '../../utils/Common';
-import Images from '../../assets/images/Images';
+import React, { useEffect, useState } from 'react'
+import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { i18n } from '../../assets/locale/i18n'
+import { getAuth } from '../../services/remote/AuthServices'
+import { useGlobalContext } from '../../context/GlobalContext'
+import useApiRequest from '../../hooks/useApiRequest'
+import LoadingModal from '../../components/LoadingModal'
+import CustomTextInput from '../../components/CustomTextInput'
+import { showToastMessage } from '../../utils/Common'
+import Images from '../../assets/images/Images'
 
 function LoginScreen(props) {
   const [values, setValues] = useState({
     email: '',
     password: '',
     database: '',
-  });
-  const [secure, setSecure] = useState(true);
+  })
+  const [secure, setSecure] = useState(true)
   const arrayInputs = [
     {
       icon: 'icon_user',
@@ -41,45 +41,45 @@ function LoginScreen(props) {
       value: values.database,
       secure: false,
     },
-  ];
-  const {saveUserSession} = useGlobalContext();
-  const {loading, error, resetError, callEndpoint} = useApiRequest();
+  ]
+  const { saveUserSession } = useGlobalContext()
+  const { loading, error, resetError, callEndpoint } = useApiRequest()
 
   const onChangeValues = (property, value) => {
-    resetError();
-    setValues({...values, [property]: value});
-  };
+    resetError()
+    setValues({ ...values, [property]: value })
+  }
 
   const handleSecure = () => {
-    setSecure(!secure);
-  };
+    setSecure(!secure)
+  }
 
   const handleLogin = async () => {
     if (validateForm()) {
       const response = await callEndpoint(
         getAuth(values.email, values.password, values.database),
-      );
+      )
       if (response) {
-        saveUserSession(response);
-        props.navigation.replace('TabBarNavigator');
+        saveUserSession(response)
+        props.navigation.replace('TabBarNavigator')
       }
     }
-  };
+  }
 
   const validateForm = () => {
     if (values.email == '' || values.password == '' || values.database == '') {
-      showToastMessage('didcomWarningToast', i18n.t('Messages.EmptyFields'));
-      return false;
+      showToastMessage('didcomWarningToast', i18n.t('Messages.EmptyFields'))
+      return false
     }
 
-    return true;
-  };
+    return true
+  }
 
   useEffect(() => {
     if (error && error?.status != 401) {
-      showToastMessage('didcomErrorToast', error.message);
+      showToastMessage('didcomErrorToast', error.message)
     }
-  }, [error]);
+  }, [error])
 
   return (
     <>
@@ -110,7 +110,7 @@ function LoginScreen(props) {
                   onChangeText={onChangeValues}
                   handleSecure={handleSecure}
                 />
-              );
+              )
             })}
           </View>
           <View style={LoginStyle.footerBodyContainer}>
@@ -121,7 +121,7 @@ function LoginScreen(props) {
         </View>
       </View>
     </>
-  );
+  )
 }
 
 const LoginStyle = StyleSheet.create({
@@ -158,22 +158,22 @@ const LoginStyle = StyleSheet.create({
   },
   centerBodyContainer: {
     flex: 1,
-    paddingHorizontal: 30,
+    paddingHorizontal: 15,
     justifyContent: 'center',
   },
   footerBodyContainer: {
     flex: 1,
-    paddingHorizontal: 50,
+    paddingHorizontal: 15,
     justifyContent: 'center',
   },
   btnLogin: {
     height: 50,
     backgroundColor: '#004A98',
-    borderRadius: 25,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  txtLogin: {fontSize: 16, fontWeight: 'bold', color: '#FFFFFF'},
-});
+  txtLogin: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF' },
+})
 
-export default LoginScreen;
+export default LoginScreen

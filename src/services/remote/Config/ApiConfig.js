@@ -2,9 +2,9 @@ import axios from 'axios'
 import LocalStorage from '../../local/LocalStorage'
 
 const Api = axios.create({
-  //baseURL: 'https://cloud2.didcom.mx/Services/BluetoothSensorManager',
-  baseURL: 'http://192.168.12.110:45455/',
+  baseURL: 'https://cloud4.didcom.mx/APIs/BLEG',
   headers: { 'Content-type': 'application/json' },
+  timeout: 60000,
 })
 
 //INTERCEPTORS

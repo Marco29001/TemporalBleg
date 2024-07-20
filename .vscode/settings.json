@@ -1,13 +1,22 @@
 {
-    "cSpell.words": [
-        "bleg",
-        "Bleg",
-        "datetime",
-        "didcom",
-        "Highcharts",
-        "rssi",
-        "Rssi",
-        "SCROLLVIEW",
-        "Zindex"
-    ]
+  "cSpell.words": [
+    "Appbar",
+    "bleg",
+    "Bleg",
+    "blegs",
+    "Blegs",
+    "datetime",
+    "didcom",
+    "geotab",
+    "Geotab",
+    "Highcharts",
+    "lottie",
+    "Maping",
+    "reduxjs",
+    "rssi",
+    "Rssi",
+    "SCROLLVIEW",
+    "Varaible",
+    "Zindex"
+  ]
 }

@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
-import {View, TextInput, TouchableOpacity, StyleSheet} from 'react-native';
-import BlegIcon from '../assets/icons/customIcons/BlegIcon';
+import React, { useState } from 'react'
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native'
+import BlegIcon from '../assets/icons/customIcons/BlegIcon'
 
 const CustomTextInput = ({
   icon,
@@ -13,15 +13,15 @@ const CustomTextInput = ({
   handleSecure = () => {},
   error,
 }) => {
-  const [isPresed, setIsPresed] = useState(false);
+  const [isPresed, setIsPresed] = useState(false)
 
   const onFocus = () => {
-    setIsPresed(true);
-  };
+    setIsPresed(true)
+  }
 
   const onBlur = () => {
-    setIsPresed(false);
-  };
+    setIsPresed(false)
+  }
 
   return (
     <View style={Styles.inputContainer(error)}>
@@ -51,24 +51,24 @@ const CustomTextInput = ({
         </TouchableOpacity>
       ) : null}
     </View>
-  );
-};
+  )
+}
 
 const Styles = StyleSheet.create({
   inputContainer: error => {
-    const borderColor = error ? 'red' : '#004A98';
+    const borderColor = error ? 'red' : '#004A98'
     return {
       height: 50,
       flexDirection: 'row',
       borderWidth: 3,
-      borderRadius: 30,
+      borderRadius: 10,
       borderColor: borderColor,
       paddingHorizontal: 10,
       marginVertical: 10,
       alignItems: 'center',
-    };
+    }
   },
-  input: {flex: 1, fontSize: 16, color: '#000000', paddingHorizontal: 10},
+  input: { flex: 1, fontSize: 16, color: '#000000', paddingHorizontal: 10 },
   btnPassword: {
     width: 50,
     height: 40,
@@ -78,6 +78,6 @@ const Styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+})
 
-export default CustomTextInput;
+export default CustomTextInput

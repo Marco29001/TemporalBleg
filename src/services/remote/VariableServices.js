@@ -1,6 +1,6 @@
-import {apiGet} from './Config/ApiGeneric';
+import { apiGet } from './Config/ApiGeneric'
 
 export function getVariables() {
-  const enpoint = '/api/variable';
-  return apiGet(enpoint);
+  const endpoint = '/api/Variable/GetVariables'
+  return apiGet(endpoint)
 }
