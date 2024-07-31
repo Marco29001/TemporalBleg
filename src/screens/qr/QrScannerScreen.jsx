@@ -1,102 +1,151 @@
-import React, {useState, useEffect} from 'react';
-import {StyleSheet, View, Image, TouchableOpacity, Text} from 'react-native';
+import React, { useState, useEffect } from 'react'
+import { StyleSheet, View, Image, TouchableOpacity, Text } from 'react-native'
 import {
   Camera,
   useCameraDevice,
   useCodeScanner,
-} from 'react-native-vision-camera';
-import {i18n} from '../../assets/locale/i18n';
-import {validateSensor} from '../../services/remote/SensorServices';
-import {validateGateway} from '../../services/remote/GatewayServices';
-import useApiRequest from '../../hooks/useApiRequest';
-import useDialog from '../../hooks/useDialog';
-import BlegIcon from '../../assets/icons/customIcons/BlegIcon';
-import Images from '../../assets/images/Images';
-import LoadingModal from '../../components/LoadingModal';
-import {useGlobalContext} from '../../context/GlobalContext';
-import {WARNING_DIALOG} from '../../utils/Constants';
+} from 'react-native-vision-camera'
+import { i18n } from '../../assets/locale/i18n'
+import { getSensorByQrCode } from '../../services/remote/SensorServices'
+import { getBlegByQrCode } from '../../services/remote/BlegServices'
+import useApiRequest from '../../hooks/useApiRequest'
+import useDialog from '../../hooks/useDialog'
+import BlegIcon from '../../assets/icons/customIcons/BlegIcon'
+import Images from '../../assets/images/Images'
+import LoadingModal from '../../components/LoadingModal'
+import { useGlobalContext } from '../../context/GlobalContext'
+import { CAMERA_PERMISSION_DIALOG, WARNING_DIALOG } from '../../utils/Constants'
+import { useDispatch, useSelector } from 'react-redux'
+import { selectBleg, createBleg } from '../../redux/slices/blegSlice'
+import { openSettings } from 'react-native-permissions'
 
 function QrScannerScreen(props) {
-  const {type} = props.route.params;
-  const {userSession, setGateway, setSensorScanned} = useGlobalContext();
-  const [isScanned, setIsScanned] = useState(true);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [torch, setTorch] = useState('off');
-  const {showDialog} = useDialog();
-  const {loading, error, callEndpoint} = useApiRequest();
+  const { type } = props.route.params
+  const { userSession, setSensorScanned } = useGlobalContext()
+  const dispatch = useDispatch()
+  const Bleg = useSelector(selectBleg)
+  const [isScanned, setIsScanned] = useState(true)
+  const [hasPermission, setHasPermission] = useState(false)
+  const [torch, setTorch] = useState('off')
+  const { showDialog } = useDialog()
+  const { loading, error, callEndpoint } = useApiRequest()
 
-  const device = useCameraDevice('back');
+  const device = useCameraDevice('back')
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'ean-13'],
     onCodeScanned: codes => {
-      setIsScanned(false);
+      setIsScanned(false)
       if (isScanned) {
-        setIsScanned(false);
+        setIsScanned(false)
         if (codes[0].value !== '') {
           switch (type) {
-            case 'gateway':
-              getValidateGateway(codes[0].value);
-              break;
+            case 'Bleg':
+              getValidateBleg(codes[0].value)
+              break
             case 'sensor':
-              getValidateSensor(codes[0].value);
-              break;
+              getValidateSensor(codes[0].value)
+              break
           }
         }
       }
     },
-  });
+  })
+
+  useEffect(() => {
+    ;(async () => {
+      const status = await Camera.requestCameraPermission()
+      if (status == 'granted') {
+        setHasPermission(true)
+      } else {
+        showDialog(
+          CAMERA_PERMISSION_DIALOG,
+          () => {
+            openSettings().catch(() => console.warn('cannot open settings'))
+            props.navigation.replace('TabBarNavigator')
+          },
+          () => {
+            props.navigation.replace('TabBarNavigator')
+          },
+        )
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    if (error && type == 'Bleg') {
+      let configDialog = Object.assign({}, WARNING_DIALOG)
+      let message = ''
+      switch (error.status) {
+        case 400:
+          message = i18n.t('QrScanner.Error400Bleg')
+          break
+        case 409:
+          message = i18n.t('QrScanner.Error409Bleg')
+          break
+        case 404:
+          message = i18n.t('QrScanner.Error404Bleg')
+          break
+        default:
+          message = i18n.t('QrScanner.ErrorServer')
+          break
+      }
+
+      configDialog.subtitle = message
+      showDialog(configDialog, () => {
+        setIsScanned(true)
+      })
+    } else if (error && type == 'sensor') {
+      let configDialog = Object.assign({}, WARNING_DIALOG)
+      let message = ''
+      switch (error.status) {
+        case 400:
+          message = i18n.t('QrScanner.Error400Sensor')
+          break
+        case 409:
+          message = i18n.t('QrScanner.Error409Sensor')
+          break
+        default:
+          message = i18n.t('QrScanner.ErrorServer')
+          break
+      }
+
+      configDialog.subtitle = message
+      showDialog(configDialog, () => {
+        setIsScanned(true)
+      })
+    }
+  }, [error])
 
   const handleReturn = () => {
     props.navigation.replace(
-      type == 'gateway' ? 'TabBarNavigator' : 'GatewayDetailScreen',
-    );
-  };
+      type == 'Bleg' ? 'TabBarNavigator' : 'BlegDetailScreen',
+    )
+  }
 
   const getValidateSensor = async code => {
-    console.log(code);
-    const response = await callEndpoint(validateSensor(code));
+    const response = await callEndpoint(getSensorByQrCode(code, Bleg.id))
     if (response) {
-      setSensorScanned(response);
-      props.navigation.replace('SensorRegisterScreen');
+      setSensorScanned(response)
+      props.navigation.replace('SensorRegisterScreen')
     }
-  };
+  }
 
-  const getValidateGateway = async code => {
-    const codeArray = code.split(';');
-    const serialNumber = codeArray[0];
+  const getValidateBleg = async code => {
     const response = await callEndpoint(
-      validateGateway(serialNumber, userSession.database),
-    );
+      getBlegByQrCode(code, userSession.database),
+    )
     if (response) {
-      setGateway(response);
-      props.navigation.replace('GatewayRegisterScreen', {lastScreen: 'qr'});
+      dispatch(createBleg(response))
+      props.navigation.replace('BlegRegisterScreen', { lastScreen: 'qr' })
     }
-  };
-
-  useEffect(() => {
-    (async () => {
-      const status = await Camera.requestCameraPermission();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (error) {
-      let configDialog = Object.assign({}, WARNING_DIALOG);
-      configDialog.subtitle = error.message;
-
-      showDialog(configDialog, () => {
-        setIsScanned(true);
-      });
-    }
-  }, [error]);
+  }
 
   if (!device) {
-    return null;
+    return null
   }
 
   if (!hasPermission) {
-    return null;
+    return null
   }
 
   return (
@@ -118,14 +167,14 @@ function QrScannerScreen(props) {
         </View>
         <View style={Styles.topContainer} />
         <View style={Styles.centerContainer}>
-          <View style={Styles.rigthContainer} />
+          <View style={Styles.rightContainer} />
           <View style={Styles.rectangleContainer}>
             <View style={Styles.content}>
               <View style={Styles.leftTop}>
                 <Image style={Styles.imgTopLeft} source={Images.imgTopLeft} />
               </View>
-              <View style={Styles.rigthTop}>
-                <Image style={Styles.imgTopRigth} source={Images.imgTopRigth} />
+              <View style={Styles.rightTop}>
+                <Image style={Styles.imgTopRight} source={Images.imgTopRight} />
               </View>
             </View>
             <View style={Styles.content}>
@@ -135,10 +184,10 @@ function QrScannerScreen(props) {
                   source={Images.imgBottomLeft}
                 />
               </View>
-              <View style={Styles.rigthBottom}>
+              <View style={Styles.rightBottom}>
                 <Image
-                  style={Styles.imgBottomRigth}
-                  source={Images.imgBottomRigth}
+                  style={Styles.imgBottomRight}
+                  source={Images.imgBottomRight}
                 />
               </View>
             </View>
@@ -155,7 +204,7 @@ function QrScannerScreen(props) {
             <TouchableOpacity
               style={Styles.btnLantern}
               onPress={() => {
-                setTorch(f => (f === 'off' ? 'on' : 'off'));
+                setTorch(f => (f === 'off' ? 'on' : 'off'))
               }}>
               <BlegIcon name="icon_lantern" color={'#FFFFFF'} size={25} />
             </TouchableOpacity>
@@ -163,7 +212,7 @@ function QrScannerScreen(props) {
         </View>
       </View>
     </>
-  );
+  )
 }
 
 const Styles = StyleSheet.create({
@@ -177,21 +226,21 @@ const Styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  txtTitleHeader: {fontSize: 20, fontWeight: 'bold', color: '#FFFFFF'},
-  topContainer: {flex: 0.6, backgroundColor: 'rgba(0,0,0,0.5)'},
+  txtTitleHeader: { fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' },
+  topContainer: { flex: 0.6, backgroundColor: 'rgba(0,0,0,0.5)' },
   centerContainer: {
     flex: 1,
     flexDirection: 'row',
     backgroundColor: 'transparent',
   },
-  rigthContainer: {flex: 0.2, backgroundColor: 'rgba(0,0,0,0.5)'},
-  rectangleContainer: {flex: 1, backgroundColor: 'transparent', zIndex: 1},
-  leftContainer: {flex: 0.2, backgroundColor: 'rgba(0,0,0,0.5)'},
-  content: {flex: 1, flexDirection: 'row', zIndex: 1},
-  leftTop: {flex: 1},
-  rigthTop: {flex: 1, alignItems: 'flex-end'},
-  leftBottom: {flex: 1, justifyContent: 'flex-end'},
-  rigthBottom: {flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end'},
+  rightContainer: { flex: 0.2, backgroundColor: 'rgba(0,0,0,0.5)' },
+  rectangleContainer: { flex: 1, backgroundColor: 'transparent', zIndex: 1 },
+  leftContainer: { flex: 0.2, backgroundColor: 'rgba(0,0,0,0.5)' },
+  content: { flex: 1, flexDirection: 'row', zIndex: 1 },
+  leftTop: { flex: 1 },
+  rightTop: { flex: 1, alignItems: 'flex-end' },
+  leftBottom: { flex: 1, justifyContent: 'flex-end' },
+  rightBottom: { flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end' },
   imgTopLeft: {
     width: 100,
     height: 100,
@@ -199,7 +248,7 @@ const Styles = StyleSheet.create({
     marginLeft: -15,
     resizeMode: 'contain',
   },
-  imgTopRigth: {
+  imgTopRight: {
     width: 100,
     height: 100,
     marginTop: -10,
@@ -213,7 +262,7 @@ const Styles = StyleSheet.create({
     marginLeft: -15,
     resizeMode: 'contain',
   },
-  imgBottomRigth: {
+  imgBottomRight: {
     width: 100,
     height: 100,
     marginBottom: -10,
@@ -227,8 +276,8 @@ const Styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: -1,
   },
-  returnContent: {flex: 1, paddingHorizontal: 15},
-  lanternContent: {flex: 1, paddingHorizontal: 20, alignItems: 'flex-end'},
+  returnContent: { flex: 1, paddingHorizontal: 15 },
+  lanternContent: { flex: 1, paddingHorizontal: 20, alignItems: 'flex-end' },
   btnBack: {
     width: 100,
     height: 40,
@@ -245,6 +294,6 @@ const Styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+})
 
-export default QrScannerScreen;
+export default QrScannerScreen

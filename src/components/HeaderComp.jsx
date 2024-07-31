@@ -1,57 +1,71 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
-import StatusBarComp from './StatusBarComp';
-import BlegIcon from '../assets/icons/customIcons/BlegIcon';
+import React, { useState } from 'react'
+import { TouchableOpacity, StyleSheet } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialIcons'
+import { useNavigation } from '@react-navigation/native'
+import { Appbar, Menu, Switch } from 'react-native-paper'
+import StatusBarComp from './StatusBarComp'
+import { i18n } from '../assets/locale/i18n'
 
-function HeaderComp({title, subtitle, handleReturn}) {
+function HeaderComp({
+  title,
+  isOptions = false,
+  isSwitchActive,
+  isSwitchOn,
+  onToggleSwitch,
+  handleReturn,
+}) {
+  const navigation = useNavigation()
+  const [visible, setVisible] = useState(false)
+
+  const openMenu = () => setVisible(true)
+  const closeMenu = () => setVisible(false)
+  const handleOption = () => {
+    navigation.replace('AssetTrackingScreen')
+  }
+
   return (
     <>
       <StatusBarComp backgroundColor="#003180" barStyle={'light-content'} />
 
-      <View style={styles.headerContainer}>
-        <View style={styles.returnContainer}>
-          <TouchableOpacity style={styles.btnReturn} onPress={handleReturn}>
-            <BlegIcon name="icon_return" color={'#FFFFFF'} size={20} />
-          </TouchableOpacity>
-          <Text style={styles.txtTitle}>{title}</Text>
-        </View>
-        <View style={styles.titleContainer}>
-          <Text style={styles.txtSubtitle}>{subtitle}</Text>
-        </View>
-      </View>
+      <Appbar.Header style={styles.headerContainer}>
+        <Appbar.BackAction iconColor="#FFFFFF" onPress={handleReturn} />
+        <Appbar.Content titleStyle={styles.txtTitle} title={title} />
+        {isOptions && (
+          <Menu
+            visible={visible}
+            onDismiss={closeMenu}
+            anchor={
+              <TouchableOpacity style={styles.buttonOption} onPress={openMenu}>
+                <Icon name="more-vert" size={25} color={'#FFFFFF'} />
+              </TouchableOpacity>
+            }>
+            <Menu.Item
+              onPress={handleOption}
+              title={i18n.t('Header.AssetTracker')}
+            />
+          </Menu>
+        )}
+        {isSwitchActive && (
+          <Switch
+            style={{ marginLeft: 16 }}
+            color="#FFFFFF"
+            value={isSwitchOn}
+            onValueChange={onToggleSwitch}
+          />
+        )}
+      </Appbar.Header>
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flex: 0.15,
-    backgroundColor: '#003180',
-    paddingHorizontal: 15,
-  },
-  returnContainer: {
-    flex: 1.5,
-    flexDirection: 'row',
-    paddingHorizontal: 15,
-    alignItems: 'center',
-  },
-  btnReturn: {
-    width: 50,
-    height: 50,
-    justifyContent: 'center',
-  },
-  titleContainer: {
-    flex: 1,
-    paddingHorizontal: 15,
-    alignItems: 'center',
-  },
+  headerContainer: { backgroundColor: '#003180' },
   txtTitle: {
-    fontSize: 25,
+    fontSize: 22,
     fontFamily: 'Quicksand',
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
-  txtSubtitle: {fontSize: 15, color: '#FFFFFF', marginTop: 10},
-});
+})
 
-export default HeaderComp;
+export default HeaderComp

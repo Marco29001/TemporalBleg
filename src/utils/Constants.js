@@ -1,113 +1,117 @@
-export const TOKEN = 'token';
-export const SENSOR_MANAGER_SERVICE = '00002a67-0000-1000-8000-00805f9b34fb';
-export const SENSOR_CHARACTERISTIC = '00001817-0000-1000-8000-00805f9b34fb';
-export const NAME_GATEWAY = 'Gateway BLE';
+import { i18n } from '../assets/locale/i18n'
+
+export const TOKEN = 'token'
+export const SENSOR_MANAGER_SERVICE = '00002a67-0000-1000-8000-00805f9b34fb'
+export const SENSOR_CHARACTERISTIC = '00001817-0000-1000-8000-00805f9b34fb'
+export const NAME_Bleg = 'Gateway BLE'
 export const LOCATION_PERMISSION_DIALOG = {
   open: true,
   type: 'LOCATION_PERMISSION_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'necesita permiso para acceder a tu ubicación, para darte un mejor servicio en tiempo real',
+  subtitle: i18n.t('Constants.LocationPermission'),
   isAccept: true,
-  txtAccept: 'Ir a configuraciones',
+  txtAccept: i18n.t('Constants.GoToConfiguration'),
   isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtCancel: i18n.t('Constants.NoThanks'),
+}
 export const LOCATION_SETIINGS_DIALOG = {
   open: true,
   type: 'LOCATION_SETIINGS_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'necesita que enciendas tu ubicación actual para un buen funcionamiento del bluetooth y conexión',
+  subtitle: i18n.t('Constants.LocationSettings'),
   isAccept: true,
-  txtAccept: 'Ir a configuraciones',
+  txtAccept: i18n.t('Constants.GoToConfiguration'),
   isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtCancel: i18n.t('Constants.NoThanks'),
+}
 export const BLUETOOTH_NOSUPPORT_DIALOG = {
   open: true,
   type: 'BLUETOOTH_NOSUPPORT_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'Tu dispositivo no tiene soporte para Bluetooth Low Energy, no puedes acceder a tiempo real',
+  subtitle: i18n.t('Constants.BluetoothNotSupport'),
   isAccept: true,
-  txtAccept: 'Encender Bluetooth',
-  isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtAccept: i18n.t('Constants.Accept'),
+  isCancel: false,
+  txtCancel: '',
+}
 export const BLUETOOTH_PERMISSION_DIALOG = {
   open: true,
   type: 'BLUETOOTH_PERMISSION_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'necesita permisos para la detección de dispositivos cercanos, para darte un mejor servicio en tiempo real',
+  subtitle: i18n.t('Constants.BluetoothPermission'),
   isAccept: true,
-  txtAccept: 'Ir a configuración',
+  txtAccept: i18n.t('Constants.GoToConfiguration'),
   isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtCancel: i18n.t('Constants.NoThanks'),
+}
 export const BLUETOOTH_ENABLED_DIALOG = {
   open: true,
   type: 'BLUETOOTH_ENABLED_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'necesita que enciendas bluetooth en tu dispositivo para utilizar el tiempo real',
+  subtitle: i18n.t('Constants.BluetoothEnabled'),
   isAccept: true,
-  txtAccept: 'Encender Bluetooth',
+  txtAccept: i18n.t('Constants.BluetoothTurnOn'),
   isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtCancel: i18n.t('Constants.NoThanks'),
+}
 export const CAMERA_PERMISSION_DIALOG = {
   open: true,
   type: 'CAMERA_PERMISSION_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'necesita acceso a la cámara de tu teléfono, para leer el QR de los dispositivos',
+  subtitle: i18n.t('Constants.CameraPermission'),
   isAccept: true,
-  txtAccept: 'Encender Bluetooth',
+  txtAccept: i18n.t('Constants.GoToConfiguration'),
   isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtCancel: i18n.t('Constants.NoThanks'),
+}
 export const ALL_PERMISSION_DIALOG = {
   open: true,
   type: 'ALL_PERMISSION_DIALOG',
   title: 'Didcom Bluetooth Manager',
-  subtitle:
-    'necesita permisos para acceder a varias características de tu dispositivo para funcionar correctamente, recuerda dar los accesos necesarios',
+  subtitle: i18n.t('Constants.AllPermission'),
   isAccept: true,
-  txtAccept: 'aceptar',
+  txtAccept: i18n.t('Constants.GoToConfiguration'),
   isCancel: true,
-  txtCancel: 'No, gracias',
-};
+  txtCancel: i18n.t('Constants.NoThanks'),
+}
 export const DELETE_SENSOR_DIALOG = {
   open: true,
   type: 'WARNING',
   subtitle: '',
   isAccept: true,
-  txtAccept: 'Si, eliminar',
+  txtAccept: i18n.t('Constants.Delete'),
   isCancel: true,
-  txtCancel: 'No, eliminar',
-};
+  txtCancel: i18n.t('Constants.Cancel'),
+}
+export const DISCONNECT_BLEG_DIALOG = {
+  open: true,
+  type: 'WARNING',
+  subtitle: i18n.t('Constants.BluetoothConnectedQuestion'),
+  isAccept: true,
+  txtAccept: i18n.t('Constants.Accept'),
+  isCancel: true,
+  txtCancel: i18n.t('Constants.Cancel'),
+}
 export const OK_DIALOG = {
   open: true,
   type: 'OK',
   title: '',
   subtitle: '',
   isAccept: true,
-  txtAccept: 'Aceptar',
+  txtAccept: i18n.t('Constants.Accept'),
   isCancel: false,
   txtCancel: '',
-};
+}
 export const WARNING_DIALOG = {
   open: true,
   type: 'WARNING',
   title: '',
   subtitle: '',
   isAccept: true,
-  txtAccept: 'Aceptar',
+  txtAccept: i18n.t('Constants.Accept'),
   isCancel: false,
   txtCancel: '',
-};
+}
 
 //--------------------------
-export const DIALOGS = [];
+export const DIALOGS = []

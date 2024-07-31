@@ -1,16 +1,16 @@
-import React from 'react';
-import {View, Text, Modal, TouchableOpacity, StyleSheet} from 'react-native';
-import useDialog from '../hooks/useDialog';
-import BlegIcon from '../assets/icons/customIcons/BlegIcon';
-import IconGps from '../assets/icons/icon_gps.svg';
-import IconScan from '../assets/icons/icon_scan.svg';
-import IconLocation from '../assets/icons/icon_gps_location.svg';
-import IconSecurity from '../assets/icons/icon_security.svg';
-import IconLike from '../assets/icons/icon_like.svg';
-import IconWarning from '../assets/icons/icon_warning.svg';
+import React from 'react'
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native'
+import useDialog from '../hooks/useDialog'
+import BlegIcon from '../assets/icons/customIcons/BlegIcon'
+import IconGps from '../assets/icons/icon_gps.svg'
+import IconScan from '../assets/icons/icon_scan.svg'
+import IconLocation from '../assets/icons/icon_gps_location.svg'
+import IconSecurity from '../assets/icons/icon_security.svg'
+import IconLike from '../assets/icons/icon_like.svg'
+import IconWarning from '../assets/icons/icon_warning.svg'
 
 function AlertDialogModal() {
-  const {dialogState, onAcceptDialog, onCancelDialog} = useDialog();
+  const { dialogState, onAcceptDialog, onCancelDialog } = useDialog()
 
   return (
     <Modal
@@ -50,11 +50,11 @@ function AlertDialogModal() {
         </View>
       </View>
     </Modal>
-  );
+  )
 }
 
 export function IconDialog(props) {
-  const {type} = props;
+  const { type } = props
 
   return (
     <>
@@ -77,7 +77,7 @@ export function IconDialog(props) {
         <IconWarning width={150} height={150} />
       ) : null}
     </>
-  );
+  )
 }
 
 const Styles = StyleSheet.create({
@@ -94,28 +94,36 @@ const Styles = StyleSheet.create({
     borderRadius: 16,
     padding: 15,
   },
-  imgContainer: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  img: {width: 80, height: 100, resizeMode: 'contain'},
-  questionContainer: {flex: 2, alignItems: 'center', justifyContent: 'center'},
-  txtMessage: {fontSize: 20, color: '#003180', textAlign: 'center'},
-  txtQuestion: {fontSize: 20, color: '#5F6F7E', textAlign: 'center'},
-  optionsContainer: {flex: 1, paddingHorizontal: 15, justifyContent: 'center'},
+  imgContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  img: { width: 80, height: 100, resizeMode: 'contain' },
+  questionContainer: {
+    flex: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  txtMessage: { fontSize: 20, color: '#003180', textAlign: 'center' },
+  txtQuestion: { fontSize: 20, color: '#5F6F7E', textAlign: 'center' },
+  optionsContainer: {
+    flex: 1,
+    paddingHorizontal: 15,
+    justifyContent: 'center',
+  },
   btnOptionAccept: {
     height: 50,
-    backgroundColor: '#17A0A3',
-    borderRadius: 25,
+    backgroundColor: '#003180',
+    borderRadius: 10,
     marginBottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnOptionCancel: {
     height: 50,
-    backgroundColor: '#003180',
-    borderRadius: 25,
+    backgroundColor: '#97A4B0',
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  txtButtonOption: {fontSize: 16, color: '#FFFFFF'},
-});
+  txtButtonOption: { fontSize: 16, color: '#FFFFFF' },
+})
 
-export default AlertDialogModal;
+export default AlertDialogModal

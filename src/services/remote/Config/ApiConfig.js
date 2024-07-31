@@ -1,22 +1,22 @@
-import axios from 'axios';
-import LocalStorage from '../../local/LocalStorage';
+import axios from 'axios'
+import LocalStorage from '../../local/LocalStorage'
 
 const Api = axios.create({
-  //baseURL: 'https://cloud2.didcom.mx/Services/BluetoothSensorManager',
-  baseURL: 'http://192.168.12.230:45455/',
-  headers: {'Content-type': 'application/json'},
-});
+  baseURL: 'https://cloud4.didcom.mx/APIs/BLEG',
+  headers: { 'Content-type': 'application/json' },
+  timeout: 60000,
+})
 
 //INTERCEPTORS
 Api.interceptors.request.use(async config => {
-  const user = await LocalStorage.get('user');
+  const user = await LocalStorage.get('user')
 
   if (user) {
-    const user$ = JSON.parse(user);
-    config.headers['Authorization'] = 'Bearer ' + user$.token;
+    const user$ = JSON.parse(user)
+    config.headers['Authorization'] = 'Bearer ' + user$.token
   }
 
-  return config;
-});
+  return config
+})
 
-export default Api;
+export default Api

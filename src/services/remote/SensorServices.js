@@ -1,37 +1,37 @@
-import {apiGet, apiPost, apiDelete, apiUpdate} from './Config/ApiGeneric';
+import { apiGet, apiPost, apiDelete, apiUpdate } from './Config/ApiGeneric'
 
-export function getSensorById(sensorId) {
-  const enpoint = `/api/sensor/${sensorId}`;
-  return apiGet(enpoint);
+export function getSensorById(SensorId) {
+  const endpoint = `/api/Sensor/GetSensorById?SensorId=${SensorId}`
+  return apiGet(endpoint)
 }
 
-export function getSensorConfig(typeSensorId) {
-  const enpoint = `/api/sensortype/${typeSensorId}/config`;
-  return apiGet(enpoint);
+export function getVariableSensorMaping(SensorTypeId, BlegId) {
+  let module = 'Add'
+  const endpoint = `/api/Sensor/GetVariablesSensorMaping?SensorTypeId=${SensorTypeId}&SensorId=${0}&BlegId=${BlegId}&Module=${module}`
+  return apiGet(endpoint)
+}
+
+export function getSensorByQrCode(QrCode, BlegId) {
+  const endpoint = `/api/Sensor/GetSensorByQrCode?QrCode=${QrCode}&BlegId=${BlegId}`
+  return apiGet(endpoint)
 }
 
 export function getSensorType() {
-  const enpoint = '/api/sensorType';
-  return apiGet(enpoint);
+  const endpoint = '/api/Sensor/GetSensorType'
+  return apiGet(endpoint)
 }
 
-export function validateSensor(SerialNumber) {
-  const enpoint = '/api/sensor/validate';
-  const body = {SerialNumber};
-  return apiPost(enpoint, body);
+export function addSensor(body) {
+  const endpoint = `/api/Sensor/AddSensor`
+  return apiPost(endpoint, body)
 }
 
-export function createSensor(body) {
-  const enpoint = `/api/sensor`;
-  return apiPost(enpoint, body);
+export function updateSensor(body) {
+  const endpoint = `/api/Sensor/UpdateSensor`
+  return apiUpdate(endpoint, body)
 }
 
-export function editSensor(body) {
-  const enpoint = `/api/sensor/update`;
-  return apiUpdate(enpoint, body);
-}
-
-export function deleteSensor(sensorId) {
-  const enpoint = `/api/sensor/gateway/${sensorId}`;
-  return apiDelete(enpoint);
+export function deleteSensor(SensorId) {
+  const endpoint = `/api/Sensor/DeleteSensor?SensorId=${SensorId}`
+  return apiDelete(endpoint)
 }

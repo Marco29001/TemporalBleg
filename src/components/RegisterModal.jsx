@@ -1,23 +1,26 @@
-import React from 'react';
-import {View, Text, Modal, TouchableOpacity, StyleSheet} from 'react-native';
-import BlegIcon from '../assets/icons/customIcons/BlegIcon';
+import React from 'react'
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native'
+import BlegIcon from '../assets/icons/customIcons/BlegIcon'
+import { useNavigation } from '@react-navigation/native'
+import { i18n } from '../assets/locale/i18n'
 
 function RegisterModal(props) {
-  const {visible, type, handleClose} = props;
+  const navigation = useNavigation()
+  const { visible, type, handleClose } = props
 
   const handleManualOption = () => {
-    if (type == 'gateway') {
-      props.navigation.replace('GatewayRegisterScreen', {lastScreen: 'list'});
+    if (type == 'Bleg') {
+      navigation.replace('BlegRegisterScreen', { lastScreen: 'list' })
     } else {
-      props.navigation.replace('SensorRegisterScreen');
+      navigation.replace('SensorRegisterScreen')
     }
-  };
+  }
 
   const handleQrOption = () => {
-    props.navigation.replace('QrScannerScreen', {
+    navigation.replace('QrScannerScreen', {
       type: type,
-    });
-  };
+    })
+  }
 
   return (
     <>
@@ -35,9 +38,9 @@ function RegisterModal(props) {
             </View>
             <View style={Styles.titleModalContainer}>
               <Text style={Styles.txtTitleModal}>
-                {type == 'gateway'
-                  ? 'Asignar gateway a una unidad'
-                  : 'Agregar nuevo sensor'}
+                {type == 'Bleg'
+                  ? i18n.t('RegisterModal.AssignBleg')
+                  : i18n.t('RegisterModal.AddSensor')}
               </Text>
             </View>
             <View style={Styles.optionsContainer}>
@@ -45,7 +48,9 @@ function RegisterModal(props) {
                 style={Styles.btnOption}
                 onPress={handleQrOption}>
                 <BlegIcon name="icon_qr" color={'#003180'} size={25} />
-                <Text style={Styles.txtOption}>Leer código QR</Text>
+                <Text style={Styles.txtOption}>
+                  {i18n.t('RegisterModal.ReadQr')}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={Styles.btnOption}
@@ -55,14 +60,16 @@ function RegisterModal(props) {
                   color={'#003180'}
                   size={25}
                 />
-                <Text style={Styles.txtOption}>Código manual</Text>
+                <Text style={Styles.txtOption}>
+                  {i18n.t('RegisterModal.ManualCode')}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
     </>
-  );
+  )
 }
 
 const Styles = StyleSheet.create({
@@ -79,7 +86,7 @@ const Styles = StyleSheet.create({
     borderRadius: 16,
     padding: 15,
   },
-  closeContainer: {flex: 0.3, paddingHorizontal: 10},
+  closeContainer: { flex: 0.3, paddingHorizontal: 10 },
   btnClose: {
     width: 50,
     height: 50,
@@ -97,7 +104,7 @@ const Styles = StyleSheet.create({
     color: '#414547',
     textAlign: 'center',
   },
-  optionsContainer: {flex: 1, flexDirection: 'row', justifyContent: 'center'},
+  optionsContainer: { flex: 1, flexDirection: 'row', justifyContent: 'center' },
   btnOption: {
     width: 100,
     height: 150,
@@ -108,7 +115,7 @@ const Styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  txtOption: {fontSize: 16, color: '#003180', textAlign: 'center'},
-});
+  txtOption: { fontSize: 16, color: '#003180', textAlign: 'center' },
+})
 
-export default RegisterModal;
+export default RegisterModal
