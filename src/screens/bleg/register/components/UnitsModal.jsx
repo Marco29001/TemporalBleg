@@ -80,7 +80,7 @@ function UnitsModal({ visible, handleSelectUnit, handleClose }) {
             <ListEmptyComp
               icon={'icon_bus'}
               message={
-                error ? error.message : i18n.t('BlegRegister.NoSearchUnit')
+                error ? error.message : i18n.t('BlegRegister.NoSearchUnits')
               }
               handleRefresh={refreshUnits}
             />

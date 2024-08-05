@@ -2,7 +2,7 @@ import axios from 'axios'
 import LocalStorage from '../../local/LocalStorage'
 
 const Api = axios.create({
-  baseURL: 'https://cloud4.didcom.mx/APIs/BLEG',
+  baseURL: 'http://192.168.12.250:45455',
   headers: { 'Content-type': 'application/json' },
   timeout: 60000,
 })
